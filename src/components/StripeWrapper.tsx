@@ -5,11 +5,15 @@ import { stripePromise } from '@/lib/stripe';
 
 interface StripeWrapperProps {
   children: React.ReactNode;
+  options?: {
+    clientSecret?: string;
+    [key: string]: any;
+  };
 }
 
-const StripeWrapper = ({ children }: StripeWrapperProps) => {
+const StripeWrapper = ({ children, options = {} }: StripeWrapperProps) => {
   return (
-    <Elements stripe={stripePromise}>
+    <Elements stripe={stripePromise} options={options}>
       {children}
     </Elements>
   );

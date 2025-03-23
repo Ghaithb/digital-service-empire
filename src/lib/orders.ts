@@ -63,3 +63,123 @@ export const getOrderById = (orderId: string): Order | null => {
 export const getOrdersByCustomerEmail = (email: string): Order[] => {
   return orders.filter(order => order.customerEmail === email);
 };
+
+// Obtenir toutes les commandes pour le tableau de bord admin
+export const getAllOrders = (): Order[] => {
+  return [...orders];
+};
+
+// Générer des commandes de démonstration pour le tableau de bord
+export const generateDemoOrders = () => {
+  // Générer quelques commandes de démonstration si la liste est vide
+  if (orders.length === 0) {
+    const demoItems: CartItem[] = [
+      {
+        service: {
+          id: "instagram-followers-1000",
+          title: "1000 Followers Instagram",
+          description: "Augmentez votre audience Instagram avec 1000 followers réels.",
+          price: 29.99,
+          imageUrl: "/placeholder.svg",
+          platform: "instagram",
+          category: "followers",
+          variants: []
+        },
+        quantity: 1,
+        total: 29.99
+      }
+    ];
+
+    const demoItems2: CartItem[] = [
+      {
+        service: {
+          id: "facebook-likes-500",
+          title: "500 Likes Facebook",
+          description: "Obtenez 500 likes sur vos publications Facebook.",
+          price: 19.99,
+          imageUrl: "/placeholder.svg",
+          platform: "facebook",
+          category: "likes",
+          variants: []
+        },
+        quantity: 2,
+        total: 39.98
+      }
+    ];
+
+    const demoItems3: CartItem[] = [
+      {
+        service: {
+          id: "instagram-followers-1000",
+          title: "1000 Followers Instagram",
+          description: "Augmentez votre audience Instagram avec 1000 followers réels.",
+          price: 29.99,
+          imageUrl: "/placeholder.svg",
+          platform: "instagram",
+          category: "followers",
+          variants: []
+        },
+        quantity: 1,
+        total: 29.99
+      },
+      {
+        service: {
+          id: "facebook-likes-500",
+          title: "500 Likes Facebook",
+          description: "Obtenez 500 likes sur vos publications Facebook.",
+          price: 19.99,
+          imageUrl: "/placeholder.svg",
+          platform: "facebook",
+          category: "likes",
+          variants: []
+        },
+        quantity: 1,
+        total: 19.99
+      }
+    ];
+
+    // Premier ordre: Complété (il y a 2 jours)
+    const twoDaysAgo = new Date();
+    twoDaysAgo.setDate(twoDaysAgo.getDate() - 2);
+    orders.push({
+      id: "ORD-1001",
+      items: demoItems,
+      total: 29.99,
+      customerName: "Jean Dupont",
+      customerEmail: "jean.dupont@example.com",
+      paymentStatus: "completed",
+      orderDate: twoDaysAgo,
+      sessionId: "sess_" + Math.random().toString(36).substring(2, 15)
+    });
+
+    // Deuxième ordre: En attente (hier)
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    orders.push({
+      id: "ORD-1002",
+      items: demoItems2,
+      total: 39.98,
+      customerName: "Marie Martin",
+      customerEmail: "marie.martin@example.com",
+      paymentStatus: "pending",
+      orderDate: yesterday,
+      sessionId: "sess_" + Math.random().toString(36).substring(2, 15)
+    });
+
+    // Troisième ordre: Échoué (aujourd'hui)
+    orders.push({
+      id: "ORD-1003",
+      items: demoItems3,
+      total: 49.98,
+      customerName: "Pierre Bernard",
+      customerEmail: "pierre.bernard@example.com",
+      paymentStatus: "failed",
+      orderDate: new Date(),
+      sessionId: "sess_" + Math.random().toString(36).substring(2, 15)
+    });
+  }
+};
+
+// Générer des commandes de démonstration au chargement
+generateDemoOrders();
+
