@@ -1,19 +1,31 @@
 
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartItem from "@/components/CartItem";
+import CheckoutForm from "@/components/CheckoutForm";
 import { CartItem as CartItemType, Service, getServiceById } from "@/lib/data";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ChevronRight, CreditCard, Wallet, Clock } from "lucide-react";
+import { 
+  ShoppingCart, 
+  ChevronRight, 
+  CreditCard, 
+  Wallet, 
+  Clock,
+  ChevronDown,
+  ChevronUp
+} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   // Simulating cart loading from storage
   useEffect(() => {
@@ -62,19 +74,29 @@ const Cart = () => {
     return cartItems.reduce((total, item) => total + (item.service.price * item.quantity), 0);
   };
   
-  const handleCheckout = () => {
+  const handleProceedToCheckout = () => {
+    setShowCheckoutForm(true);
+    setTimeout(() => {
+      window.scrollTo({ 
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 100);
+  };
+  
+  const handlePaymentSubmit = (values: any) => {
+    setIsProcessingPayment(true);
+    
+    // Simulate payment processing
     toast({
-      title: "Commande en cours",
-      description: "Redirection vers la page de paiement...",
+      title: "Paiement en cours",
+      description: "Veuillez patienter pendant que nous traitons votre paiement...",
     });
     
-    // Simulate checkout process
+    // Simulate API call with timeout
     setTimeout(() => {
-      setCartItems([]);
-      toast({
-        title: "Commande réussie",
-        description: "Merci pour votre achat! Vous recevrez une confirmation par email.",
-      });
+      // Navigate to confirmation page
+      navigate("/order-confirmation");
     }, 2000);
   };
   
@@ -118,6 +140,21 @@ const Cart = () => {
                     />
                   ))}
                 </div>
+                
+                {showCheckoutForm && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-card p-6 rounded-xl"
+                  >
+                    <h2 className="text-xl font-medium mb-6">Finaliser votre commande</h2>
+                    <CheckoutForm 
+                      onSubmit={handlePaymentSubmit}
+                      isProcessing={isProcessingPayment}
+                    />
+                  </motion.div>
+                )}
               </div>
               
               <div className="lg:col-span-1">
@@ -141,12 +178,22 @@ const Cart = () => {
                     </div>
                   </div>
                   
-                  <Button 
-                    className="w-full mb-4"
-                    onClick={handleCheckout}
-                  >
-                    Payer maintenant <ChevronRight size={16} className="ml-2" />
-                  </Button>
+                  {!showCheckoutForm ? (
+                    <Button 
+                      className="w-full mb-4"
+                      onClick={handleProceedToCheckout}
+                    >
+                      Passer à la caisse <ChevronRight size={16} className="ml-2" />
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline"
+                      className="w-full mb-4"
+                      onClick={() => setShowCheckoutForm(false)}
+                    >
+                      Masquer le formulaire <ChevronUp size={16} className="ml-2" />
+                    </Button>
+                  )}
                   
                   <div className="flex flex-col space-y-3 mb-6">
                     <div className="text-sm text-muted-foreground text-center mb-2">
@@ -164,7 +211,14 @@ const Cart = () => {
                       Livraison rapide sous 24h à 72h
                     </p>
                     <p>
-                      En passant votre commande, vous acceptez nos conditions générales de vente et notre politique de confidentialité.
+                      En passant votre commande, vous acceptez nos{" "}
+                      <Link to="/legal" className="text-primary hover:underline">
+                        conditions générales de vente
+                      </Link>{" "}
+                      et notre{" "}
+                      <Link to="/legal" className="text-primary hover:underline">
+                        politique de confidentialité
+                      </Link>.
                     </p>
                   </div>
                 </div>
