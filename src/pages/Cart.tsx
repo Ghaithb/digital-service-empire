@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -35,19 +36,29 @@ const Cart = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    const mockCartItems: CartItemType[] = [
-      {
-        service: getServiceById("instagram-followers-1000")!,
-        quantity: 1,
-        total: getServiceById("instagram-followers-1000")!.price,
-      },
-      {
-        service: getServiceById("facebook-likes-500")!,
-        quantity: 2,
-        total: getServiceById("facebook-likes-500")!.price * 2,
-      },
-    ];
+    // Sécuriser l'accès aux services en vérifiant qu'ils existent
+    const instagramService = getServiceById("instagram-followers-1000");
+    const facebookService = getServiceById("facebook-likes-500");
     
+    let mockCartItems: CartItemType[] = [];
+    
+    if (instagramService) {
+      mockCartItems.push({
+        service: instagramService,
+        quantity: 1,
+        total: instagramService.price,
+      });
+    }
+    
+    if (facebookService) {
+      mockCartItems.push({
+        service: facebookService,
+        quantity: 2,
+        total: facebookService.price * 2,
+      });
+    }
+    
+    // Si aucun service n'est trouvé, utiliser un tableau vide
     setTimeout(() => {
       setCartItems(mockCartItems);
       setLoading(false);
