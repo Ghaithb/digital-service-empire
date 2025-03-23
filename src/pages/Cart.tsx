@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -6,7 +5,11 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartItem from "@/components/CartItem";
 import CheckoutForm from "@/components/CheckoutForm";
+import StripeWrapper from "@/components/StripeWrapper";
+import StripePaymentForm from "@/components/StripePaymentForm";
 import { CartItem as CartItemType, Service, getServiceById } from "@/lib/data";
+import { PaymentData } from "@/lib/stripe";
+import { createOrder, updateOrderPaymentStatus } from "@/lib/orders";
 import { Button } from "@/components/ui/button";
 import { 
   ShoppingCart, 
@@ -18,18 +21,20 @@ import {
   ChevronUp
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import * as z from "zod";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
+  const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
+  const [customerInfo, setCustomerInfo] = useState<{ fullName: string; email: string } | null>(null);
+  const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Simulating cart loading from storage
   useEffect(() => {
-    // In a real app, you'd load from localStorage or an API
     const mockCartItems: CartItemType[] = [
       {
         service: getServiceById("instagram-followers-1000")!,
@@ -84,22 +89,67 @@ const Cart = () => {
     }, 100);
   };
   
-  const handlePaymentSubmit = (values: any) => {
-    setIsProcessingPayment(true);
-    
-    // Simulate payment processing
-    toast({
-      title: "Paiement en cours",
-      description: "Veuillez patienter pendant que nous traitons votre paiement...",
+  const handlePaymentSubmit = (values: z.infer<typeof formSchema>) => {
+    setCustomerInfo({
+      fullName: values.fullName,
+      email: values.email
     });
     
-    // Simulate API call with timeout
+    const order = createOrder(cartItems, values.fullName, values.email);
+    setCurrentOrderId(order.id);
+    
+    setShowPaymentForm(true);
+    setIsProcessingPayment(true);
+    
+    toast({
+      title: "Informations validées",
+      description: "Veuillez procéder au paiement pour finaliser votre commande.",
+    });
+    
     setTimeout(() => {
-      // Navigate to confirmation page
-      navigate("/order-confirmation");
-    }, 2000);
+      window.scrollTo({ 
+        top: document.body.scrollHeight,
+        behavior: 'smooth'
+      });
+    }, 100);
   };
   
+  const handlePaymentSuccess = (sessionId: string) => {
+    if (currentOrderId) {
+      updateOrderPaymentStatus(currentOrderId, 'completed', sessionId);
+    }
+    
+    navigate(`/order-confirmation?orderId=${currentOrderId}`);
+  };
+  
+  const handlePaymentError = (error: string) => {
+    if (currentOrderId) {
+      updateOrderPaymentStatus(currentOrderId, 'failed');
+    }
+    
+    toast({
+      title: "Erreur de paiement",
+      description: error,
+      variant: "destructive",
+    });
+    
+    setIsProcessingPayment(false);
+  };
+  
+  const getPaymentData = (): PaymentData => {
+    return {
+      amount: calculateTotal(),
+      items: cartItems.map(item => ({
+        id: item.service.id,
+        name: item.service.title,
+        quantity: item.quantity,
+        price: item.service.price
+      })),
+      email: customerInfo?.email || '',
+      fullName: customerInfo?.fullName || ''
+    };
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen">
@@ -141,18 +191,36 @@ const Cart = () => {
                   ))}
                 </div>
                 
-                {showCheckoutForm && (
+                {showCheckoutForm && !showPaymentForm && (
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: "auto" }}
                     transition={{ duration: 0.5 }}
                     className="bg-card p-6 rounded-xl"
                   >
-                    <h2 className="text-xl font-medium mb-6">Finaliser votre commande</h2>
+                    <h2 className="text-xl font-medium mb-6">Informations de livraison</h2>
                     <CheckoutForm 
                       onSubmit={handlePaymentSubmit}
                       isProcessing={isProcessingPayment}
                     />
+                  </motion.div>
+                )}
+                
+                {showPaymentForm && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-card p-6 rounded-xl"
+                  >
+                    <h2 className="text-xl font-medium mb-6">Paiement</h2>
+                    <StripeWrapper>
+                      <StripePaymentForm 
+                        paymentData={getPaymentData()}
+                        onSuccess={handlePaymentSuccess}
+                        onError={handlePaymentError}
+                      />
+                    </StripeWrapper>
                   </motion.div>
                 )}
               </div>
@@ -185,13 +253,22 @@ const Cart = () => {
                     >
                       Passer à la caisse <ChevronRight size={16} className="ml-2" />
                     </Button>
-                  ) : (
+                  ) : !showPaymentForm ? (
                     <Button 
                       variant="outline"
                       className="w-full mb-4"
                       onClick={() => setShowCheckoutForm(false)}
                     >
-                      Masquer le formulaire <ChevronUp size={16} className="ml-2" />
+                      Modifier le panier <ChevronUp size={16} className="ml-2" />
+                    </Button>
+                  ) : (
+                    <Button 
+                      variant="outline"
+                      className="w-full mb-4"
+                      onClick={() => setShowPaymentForm(false)}
+                      disabled={isProcessingPayment}
+                    >
+                      Modifier les informations <ChevronUp size={16} className="ml-2" />
                     </Button>
                   )}
                   
@@ -245,5 +322,23 @@ const Cart = () => {
     </motion.div>
   );
 };
+
+const formSchema = z.object({
+  fullName: z.string().min(3, {
+    message: "Le nom complet doit contenir au moins 3 caractères.",
+  }),
+  email: z.string().email({
+    message: "Veuillez entrer une adresse email valide.",
+  }),
+  cardNumber: z.string().regex(/^\d{16}$/, {
+    message: "Le numéro de carte doit contenir 16 chiffres.",
+  }),
+  expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, {
+    message: "Format: MM/YY",
+  }),
+  cvv: z.string().regex(/^\d{3,4}$/, {
+    message: "Le CVV doit contenir 3 ou 4 chiffres.",
+  }),
+});
 
 export default Cart;
