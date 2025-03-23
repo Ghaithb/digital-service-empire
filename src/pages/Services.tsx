@@ -11,9 +11,11 @@ import {
   getServicesByPlatform, 
   serviceCategories, 
   socialPlatforms,
+  serviceTypes,
   Service,
   ServiceCategory, 
-  SocialPlatform
+  SocialPlatform,
+  ServiceType
 } from "@/lib/data";
 import { Search, Filter, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -33,6 +35,7 @@ const Services = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<ServiceCategory | "all">("all");
   const [selectedPlatform, setSelectedPlatform] = useState<SocialPlatform | "all">("all");
+  const [selectedType, setSelectedType] = useState<ServiceType | "all">("all");
   const [sortBy, setSortBy] = useState("popular");
   const [activeTab, setActiveTab] = useState("all");
   
@@ -71,6 +74,13 @@ const Services = () => {
       result = result.filter(service => service.platform === selectedPlatform);
     }
     
+    // Type filter (looking at variants)
+    if (selectedType !== "all") {
+      result = result.filter(service => 
+        service.variants?.some(variant => variant.type === selectedType)
+      );
+    }
+    
     // Sort
     if (sortBy === "price-low") {
       result.sort((a, b) => a.price - b.price);
@@ -81,7 +91,7 @@ const Services = () => {
     }
     
     setFilteredServices(result);
-  }, [searchTerm, selectedCategory, selectedPlatform, sortBy]);
+  }, [searchTerm, selectedCategory, selectedPlatform, selectedType, sortBy]);
   
   // Scroll to top when filters change
   useEffect(() => {
@@ -92,10 +102,11 @@ const Services = () => {
     setSearchTerm("");
     setSelectedCategory("all");
     setSelectedPlatform("all");
+    setSelectedType("all");
     setSortBy("popular");
   };
   
-  const hasActiveFilters = searchTerm || selectedCategory !== "all" || selectedPlatform !== "all";
+  const hasActiveFilters = searchTerm || selectedCategory !== "all" || selectedPlatform !== "all" || selectedType !== "all";
   
   return (
     <motion.div
@@ -158,10 +169,11 @@ const Services = () => {
             </div>
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid grid-cols-3 mb-6">
-                <TabsTrigger value="all">Tous les services</TabsTrigger>
+              <TabsList className="grid grid-cols-4 mb-6">
+                <TabsTrigger value="all">Tous</TabsTrigger>
                 <TabsTrigger value="category">Catégories</TabsTrigger>
                 <TabsTrigger value="platform">Plateformes</TabsTrigger>
+                <TabsTrigger value="type">Types</TabsTrigger>
               </TabsList>
               
               <TabsContent value="all" className="mt-0">
@@ -217,6 +229,32 @@ const Services = () => {
                     >
                       <platform.icon size={16} className="mr-2" style={{ color: platform.color }} />
                       {platform.name}
+                    </Button>
+                  ))}
+                </div>
+              </TabsContent>
+              
+              <TabsContent value="type" className="mt-0">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    variant={selectedType === "all" ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => setSelectedType("all")}
+                    className="mb-2"
+                  >
+                    Tous
+                  </Button>
+                  
+                  {serviceTypes.map((type) => (
+                    <Button
+                      key={type.id}
+                      variant={selectedType === type.id ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setSelectedType(type.id as ServiceType)}
+                      className="mb-2"
+                    >
+                      <type.icon size={16} className="mr-2" />
+                      {type.name}
                     </Button>
                   ))}
                 </div>

@@ -4,8 +4,9 @@ import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getServiceById, Service } from "@/lib/data";
+import { getServiceById, Service, ServiceVariant, getServiceTypeInfo } from "@/lib/data";
 import { Button } from "@/components/ui/button";
+import ServiceVariantSelector from "@/components/ServiceVariantSelector";
 import { 
   ChevronLeft, 
   ShoppingCart, 
@@ -23,6 +24,7 @@ const ServiceDetail = () => {
   const [service, setService] = useState<Service | null>(null);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [quantity, setQuantity] = useState(1);
+  const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -31,6 +33,11 @@ const ServiceDetail = () => {
       const serviceData = getServiceById(id);
       if (serviceData) {
         setService(serviceData);
+        // Sélectionner la première variante par défaut ou celle marquée comme populaire
+        if (serviceData.variants && serviceData.variants.length > 0) {
+          const popularVariant = serviceData.variants.find(v => v.popular);
+          setSelectedVariant(popularVariant || serviceData.variants[0]);
+        }
       } else {
         navigate("/services");
       }
@@ -41,11 +48,19 @@ const ServiceDetail = () => {
   
   const handleAddToCart = () => {
     if (service) {
+      const variantInfo = selectedVariant ? ` (${selectedVariant.title})` : '';
       toast({
         title: "Service ajouté au panier",
-        description: `${quantity} × ${service.title} a été ajouté à votre panier.`,
+        description: `${quantity} × ${service.title}${variantInfo} a été ajouté à votre panier.`,
       });
     }
+  };
+  
+  const getPrice = () => {
+    if (selectedVariant) {
+      return selectedVariant.price;
+    }
+    return service?.price || 0;
   };
   
   if (!service) {
@@ -109,7 +124,9 @@ const ServiceDetail = () => {
                       service.platform === 'instagram' ? '#E1306C' :
                       service.platform === 'facebook' ? '#1877F2' :
                       service.platform === 'twitter' ? '#1DA1F2' :
-                      service.platform === 'youtube' ? '#FF0000' : '#000'
+                      service.platform === 'youtube' ? '#FF0000' :
+                      service.platform === 'tiktok' ? '#000000' :
+                      service.platform === 'snapchat' ? '#FFFC00' : '#0077B5'
                   }}
                 >
                   <service.icon size={20} className="text-white" />
@@ -124,11 +141,20 @@ const ServiceDetail = () => {
               
               <h1 className="text-3xl md:text-4xl font-bold mb-4">{service.title}</h1>
               
-              <p className="text-xl font-bold mb-4">{service.price.toFixed(2)} €</p>
+              <p className="text-xl font-bold mb-4">{getPrice().toFixed(2)} €</p>
               
               <p className="text-muted-foreground mb-6">
                 {service.description}
               </p>
+              
+              {/* Variants Selector */}
+              {service.variants && service.variants.length > 0 && (
+                <ServiceVariantSelector
+                  service={service}
+                  selectedVariant={selectedVariant}
+                  onSelectVariant={setSelectedVariant}
+                />
+              )}
               
               <div className="mb-8">
                 <h3 className="text-lg font-medium mb-4">Caractéristiques</h3>
