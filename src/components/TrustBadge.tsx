@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import { Star } from "lucide-react";
+import { Star, Truck, ShieldCheck } from "lucide-react";
 
 const TrustBadge = () => {
   return (
@@ -30,15 +30,27 @@ const TrustBadge = () => {
           </motion.div>
         </div>
 
-        <motion.div 
-          initial={{ y: 10, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="flex items-center"
-        >
-          <span className="text-sm font-medium mr-2">LIVRAISON EXPRESS :</span>
-          <span className="text-sm font-bold">24 HEURES</span>
-        </motion.div>
+        <div className="flex items-center space-x-6">
+          <motion.div 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="flex items-center"
+          >
+            <Truck size={18} className="mr-2 text-primary" />
+            <span className="text-sm font-medium">LIVRAISON EXPRESS : <span className="font-bold">24 HEURES</span></span>
+          </motion.div>
+          
+          <motion.div 
+            initial={{ y: 10, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+            className="hidden md:flex items-center"
+          >
+            <ShieldCheck size={18} className="mr-2 text-primary" />
+            <span className="text-sm font-medium">PAIEMENT SÉCURISÉ</span>
+          </motion.div>
+        </div>
       </div>
     </div>
   );

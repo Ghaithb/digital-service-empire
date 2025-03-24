@@ -2,10 +2,24 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ShoppingCart } from "lucide-react";
+import { Menu, X, ShoppingCart, ChevronDown } from "lucide-react";
 import { socialPlatforms, serviceCategories } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "@/components/ui/navigation-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -33,8 +47,9 @@ const Navbar = () => {
   
   const navLinks = [
     { name: "Accueil", path: "/" },
-    { name: "Services", path: "/services" },
-    { name: "À propos", path: "/about" }
+    { name: "Services", path: "/services", hasDropdown: true },
+    { name: "Parcours & Avis", path: "/about", hasDropdown: true },
+    { name: "Espace client", path: "/dashboard", hasDropdown: true }
   ];
 
   return (
@@ -54,32 +69,158 @@ const Navbar = () => {
           <span>DigiBoost</span>
         </Link>
         
-        {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center space-x-8">
+        {/* Desktop Navigation with Dropdowns */}
+        <div className="hidden md:flex items-center space-x-2">
           {navLinks.map((link) => (
-            <Link
-              key={link.path}
-              to={link.path}
-              className={cn(
-                "relative font-medium transition-colors hover:text-primary",
-                location.pathname === link.path 
-                  ? "text-primary" 
-                  : "text-foreground/80"
-              )}
-            >
-              {link.name}
-              {location.pathname === link.path && (
-                <motion.div 
-                  layoutId="navbar-indicator"
-                  className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ duration: 0.3 }}
-                />
-              )}
-            </Link>
+            link.hasDropdown ? (
+              <NavigationMenu key={link.path}>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className={cn(
+                      "font-medium transition-colors hover:text-primary",
+                      location.pathname === link.path 
+                        ? "text-primary" 
+                        : "text-foreground/80"
+                    )}>
+                      {link.name}
+                    </NavigationMenuTrigger>
+                    
+                    {link.name === "Services" && (
+                      <NavigationMenuContent className="bg-background/95 backdrop-blur-md p-4 shadow-lg rounded-md">
+                        <div className="grid grid-cols-2 gap-3 w-[400px]">
+                          <div>
+                            <h4 className="font-medium mb-2 text-sm">Réseaux sociaux</h4>
+                            <ul className="space-y-1">
+                              {socialPlatforms.map((platform) => (
+                                <li key={platform.id}>
+                                  <Link
+                                    to={`/services/platform/${platform.id}`}
+                                    className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
+                                  >
+                                    <platform.icon size={16} style={{ color: platform.color }} />
+                                    <span>{platform.name}</span>
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                          <div>
+                            <h4 className="font-medium mb-2 text-sm">Catégories</h4>
+                            <ul className="space-y-1">
+                              {serviceCategories.map((category) => (
+                                <li key={category.id}>
+                                  <Link
+                                    to={`/services/category/${category.id}`}
+                                    className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
+                                  >
+                                    <category.icon size={16} />
+                                    <span>{category.name}</span>
+                                  </Link>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </NavigationMenuContent>
+                    )}
+                    
+                    {link.name === "Parcours & Avis" && (
+                      <NavigationMenuContent className="bg-background/95 backdrop-blur-md p-4 shadow-lg rounded-md">
+                        <ul className="space-y-1 w-[200px]">
+                          <li>
+                            <Link
+                              to="/about"
+                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
+                            >
+                              <span>Notre Parcours</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              to="/testimonials"
+                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
+                            >
+                              <span>Avis client</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              to="/blog"
+                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
+                            >
+                              <span>Blog</span>
+                            </Link>
+                          </li>
+                        </ul>
+                      </NavigationMenuContent>
+                    )}
+                    
+                    {link.name === "Espace client" && (
+                      <NavigationMenuContent className="bg-background/95 backdrop-blur-md p-4 shadow-lg rounded-md">
+                        <ul className="space-y-1 w-[200px]">
+                          <li>
+                            <Link
+                              to="/dashboard"
+                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
+                            >
+                              <span>Mon compte</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              to="/order-tracking"
+                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
+                            >
+                              <span>Suivre ma commande</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              to="/contact"
+                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
+                            >
+                              <span>Nous Contacter</span>
+                            </Link>
+                          </li>
+                          <li>
+                            <Link
+                              to="/loyalty"
+                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
+                            >
+                              <span>Fidélité & Parrainage</span>
+                            </Link>
+                          </li>
+                        </ul>
+                      </NavigationMenuContent>
+                    )}
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+            ) : (
+              <Link
+                key={link.path}
+                to={link.path}
+                className={cn(
+                  "px-3 py-2 relative font-medium transition-colors hover:text-primary",
+                  location.pathname === link.path 
+                    ? "text-primary" 
+                    : "text-foreground/80"
+                )}
+              >
+                {link.name}
+                {location.pathname === link.path && (
+                  <motion.div 
+                    layoutId="navbar-indicator"
+                    className="absolute -bottom-1 left-0 right-0 h-0.5 bg-primary rounded-full"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.3 }}
+                  />
+                )}
+              </Link>
+            )
           ))}
-        </nav>
+        </div>
         
         {/* Cart and Mobile Menu Buttons */}
         <div className="flex items-center space-x-3">
@@ -121,51 +262,97 @@ const Navbar = () => {
           >
             <div className="container px-4 py-5 mx-auto flex flex-col space-y-4">
               {navLinks.map((link) => (
-                <Link
-                  key={link.path}
-                  to={link.path}
-                  className={cn(
-                    "text-lg py-2 px-4 rounded-md transition-colors",
-                    location.pathname === link.path 
-                      ? "bg-primary/10 text-primary font-medium" 
-                      : "hover:bg-secondary"
-                  )}
-                >
-                  {link.name}
-                </Link>
+                link.hasDropdown ? (
+                  <DropdownMenu key={link.path}>
+                    <DropdownMenuTrigger className="flex items-center justify-between w-full py-2 px-4 rounded-md hover:bg-secondary">
+                      <span>{link.name}</span>
+                      <ChevronDown size={16} />
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="w-full">
+                      {link.name === "Services" && (
+                        <div className="p-2">
+                          <div className="mb-4">
+                            <p className="text-sm text-muted-foreground mb-2 px-2">Réseaux sociaux</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {socialPlatforms.map((platform) => (
+                                <DropdownMenuItem key={platform.id} asChild>
+                                  <Link
+                                    to={`/services/platform/${platform.id}`}
+                                    className="flex items-center space-x-2"
+                                  >
+                                    <platform.icon size={16} style={{ color: platform.color }} />
+                                    <span>{platform.name}</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <p className="text-sm text-muted-foreground mb-2 px-2">Catégories</p>
+                            <div className="grid grid-cols-2 gap-2">
+                              {serviceCategories.map((category) => (
+                                <DropdownMenuItem key={category.id} asChild>
+                                  <Link
+                                    to={`/services/category/${category.id}`}
+                                    className="flex items-center space-x-2"
+                                  >
+                                    <category.icon size={16} />
+                                    <span>{category.name}</span>
+                                  </Link>
+                                </DropdownMenuItem>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                      
+                      {link.name === "Parcours & Avis" && (
+                        <div className="p-2">
+                          <DropdownMenuItem asChild>
+                            <Link to="/about">Notre Parcours</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to="/testimonials">Avis client</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to="/blog">Blog</Link>
+                          </DropdownMenuItem>
+                        </div>
+                      )}
+                      
+                      {link.name === "Espace client" && (
+                        <div className="p-2">
+                          <DropdownMenuItem asChild>
+                            <Link to="/dashboard">Mon compte</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to="/order-tracking">Suivre ma commande</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to="/contact">Nous Contacter</Link>
+                          </DropdownMenuItem>
+                          <DropdownMenuItem asChild>
+                            <Link to="/loyalty">Fidélité & Parrainage</Link>
+                          </DropdownMenuItem>
+                        </div>
+                      )}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Link
+                    key={link.path}
+                    to={link.path}
+                    className={cn(
+                      "text-lg py-2 px-4 rounded-md transition-colors",
+                      location.pathname === link.path 
+                        ? "bg-primary/10 text-primary font-medium" 
+                        : "hover:bg-secondary"
+                    )}
+                  >
+                    {link.name}
+                  </Link>
+                )
               ))}
-              
-              <div className="pt-4 border-t">
-                <p className="text-sm text-muted-foreground mb-2 px-4">Catégories</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {serviceCategories.map((category) => (
-                    <Link
-                      key={category.id}
-                      to={`/services/category/${category.id}`}
-                      className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
-                    >
-                      <category.icon size={16} />
-                      <span>{category.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="pt-4 border-t">
-                <p className="text-sm text-muted-foreground mb-2 px-4">Plateformes</p>
-                <div className="grid grid-cols-2 gap-2">
-                  {socialPlatforms.map((platform) => (
-                    <Link
-                      key={platform.id}
-                      to={`/services/platform/${platform.id}`}
-                      className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
-                    >
-                      <platform.icon size={16} style={{ color: platform.color }} />
-                      <span>{platform.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              </div>
             </div>
           </motion.div>
         )}
