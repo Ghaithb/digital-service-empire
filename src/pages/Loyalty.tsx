@@ -1,6 +1,6 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Link } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TrustBadge from "@/components/TrustBadge";
@@ -15,7 +15,6 @@ const Loyalty = () => {
   const [copied, setCopied] = useState(false);
   const referralCode = "DIGI-FRIEND";
   
-  // Scroll to top on page load
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
