@@ -1,5 +1,6 @@
 
 import { CartItem } from "./data";
+import { Heart, User } from "lucide-react";
 
 export interface Order {
   id: string;
@@ -83,6 +84,10 @@ export const generateDemoOrders = () => {
           imageUrl: "/placeholder.svg",
           platform: "instagram",
           category: "followers",
+          icon: User,
+          popular: true,
+          features: ["Livraison rapide", "Sécurisé", "Support 24/7", "Garantie de remboursement"],
+          deliveryTime: "1-2 jours",
           variants: []
         },
         quantity: 1,
@@ -100,6 +105,10 @@ export const generateDemoOrders = () => {
           imageUrl: "/placeholder.svg",
           platform: "facebook",
           category: "likes",
+          icon: Heart,
+          popular: false,
+          features: ["Livraison rapide", "Sécurisé", "Support 24/7", "Qualité supérieure"],
+          deliveryTime: "24 heures",
           variants: []
         },
         quantity: 2,
@@ -117,6 +126,10 @@ export const generateDemoOrders = () => {
           imageUrl: "/placeholder.svg",
           platform: "instagram",
           category: "followers",
+          icon: User,
+          popular: true,
+          features: ["Livraison rapide", "Sécurisé", "Support 24/7", "Garantie de remboursement"],
+          deliveryTime: "1-2 jours",
           variants: []
         },
         quantity: 1,
@@ -131,6 +144,10 @@ export const generateDemoOrders = () => {
           imageUrl: "/placeholder.svg",
           platform: "facebook",
           category: "likes",
+          icon: Heart,
+          popular: false,
+          features: ["Livraison rapide", "Sécurisé", "Support 24/7", "Qualité supérieure"],
+          deliveryTime: "24 heures",
           variants: []
         },
         quantity: 1,
@@ -182,4 +199,3 @@ export const generateDemoOrders = () => {
 
 // Générer des commandes de démonstration au chargement
 generateDemoOrders();
-
