@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -10,6 +9,14 @@ import { serviceCategories } from "@/lib/data";
 import { ArrowRight, Sparkles, Shield, Clock, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import TrustBadge from "@/components/TrustBadge";
+import PromoTimer from "@/components/PromoTimer";
+import HowItWorks from "@/components/HowItWorks";
+import KeyAdvantages from "@/components/KeyAdvantages";
+import PlatformShowcase from "@/components/PlatformShowcase";
+import SpotifyServices from "@/components/SpotifyServices";
+import NewsletterSignup from "@/components/NewsletterSignup";
+import ChatWidget from "@/components/ChatWidget";
 
 const Index = () => {
   // Scroll to top on page load
@@ -24,10 +31,12 @@ const Index = () => {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.5 }}
     >
+      <TrustBadge />
       <Navbar />
       
       <main>
         <HeroSection />
+        <PromoTimer />
         
         {/* Features section */}
         <section className="py-16">
@@ -91,7 +100,11 @@ const Index = () => {
           </div>
         </section>
         
+        <HowItWorks />
         <FeaturedServices />
+        <KeyAdvantages />
+        <PlatformShowcase />
+        <SpotifyServices />
         
         {/* Categories section */}
         <section className="py-16">
@@ -144,6 +157,7 @@ const Index = () => {
         </section>
         
         <TestimonialSection />
+        <NewsletterSignup />
         
         {/* CTA section */}
         <section className="py-16 bg-primary/5">
@@ -166,6 +180,7 @@ const Index = () => {
       </main>
       
       <Footer />
+      <ChatWidget />
     </motion.div>
   );
 };
