@@ -1,10 +1,11 @@
 
 import { CartItem } from "./data";
+import { CartItemWithLink } from "./cart";
 import { Heart, User } from "lucide-react";
 
 export interface Order {
   id: string;
-  items: CartItem[];
+  items: CartItemWithLink[];
   total: number;
   customerName: string;
   customerEmail: string;
@@ -18,7 +19,7 @@ const orders: Order[] = [];
 
 // Créer une nouvelle commande
 export const createOrder = (
-  items: CartItem[],
+  items: CartItemWithLink[],
   customerName: string,
   customerEmail: string
 ): Order => {
@@ -74,7 +75,7 @@ export const getAllOrders = (): Order[] => {
 export const generateDemoOrders = () => {
   // Générer quelques commandes de démonstration si la liste est vide
   if (orders.length === 0) {
-    const demoItems: CartItem[] = [
+    const demoItems: CartItemWithLink[] = [
       {
         service: {
           id: "instagram-followers-1000",
@@ -91,11 +92,12 @@ export const generateDemoOrders = () => {
           variants: []
         },
         quantity: 1,
-        total: 29.99
+        total: 29.99,
+        socialMediaLink: "https://www.instagram.com/exemple_utilisateur"
       }
     ];
 
-    const demoItems2: CartItem[] = [
+    const demoItems2: CartItemWithLink[] = [
       {
         service: {
           id: "facebook-likes-500",
@@ -112,11 +114,12 @@ export const generateDemoOrders = () => {
           variants: []
         },
         quantity: 2,
-        total: 39.98
+        total: 39.98,
+        socialMediaLink: "https://www.facebook.com/post/exemple"
       }
     ];
 
-    const demoItems3: CartItem[] = [
+    const demoItems3: CartItemWithLink[] = [
       {
         service: {
           id: "instagram-followers-1000",
@@ -133,7 +136,8 @@ export const generateDemoOrders = () => {
           variants: []
         },
         quantity: 1,
-        total: 29.99
+        total: 29.99,
+        socialMediaLink: "https://www.instagram.com/autre_utilisateur"
       },
       {
         service: {
@@ -151,7 +155,8 @@ export const generateDemoOrders = () => {
           variants: []
         },
         quantity: 1,
-        total: 19.99
+        total: 19.99,
+        socialMediaLink: "https://www.facebook.com/post/exemple2"
       }
     ];
 

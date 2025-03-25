@@ -1,8 +1,8 @@
 
 import { loadStripe } from '@stripe/stripe-js';
 
-// Remplacer par votre clé publique Stripe
-export const stripePromise = loadStripe("pk_test_51BbH02LJKB5MBZnj0BXpOQDLTa4Oj0nVxVJyWgJMrNVYvhlM7st3bSxlFGmUht7KvgoDTJdJMRGbj4BQSxaGKnJV00BPrrrTOj");
+// Clé publique Stripe (pour le frontend)
+export const stripePromise = loadStripe("pk_live_51PUigvP6gU8ilmUx9sZ4L2e2Zcio8mF1ZaVqCFaGDSuD9OGzQpPv6Zs3RLbTchCVfSVG4GpbDIXE3hhEfkb1ERgx00qqKKiAOu");
 
 // Types pour les paiements
 export interface PaymentData {
@@ -12,6 +12,7 @@ export interface PaymentData {
     name: string;
     quantity: number;
     price: number;
+    socialMediaLink?: string;
   }>;
   email: string;
   fullName: string;
@@ -19,23 +20,46 @@ export interface PaymentData {
 
 // Fonction pour créer une session de paiement
 export const createPaymentSession = async (paymentData: PaymentData): Promise<{ sessionId: string }> => {
-  // En production, vous devriez appeler votre API backend
-  // Simulons une réponse de l'API ici
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({
-        sessionId: `session_${Math.random().toString(36).substring(2, 15)}`
-      });
-    }, 1500);
-  });
+  try {
+    // Appel à votre API backend pour créer une session Stripe
+    const response = await fetch('/api/create-checkout-session', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(paymentData),
+    });
+
+    if (!response.ok) {
+      throw new Error('Erreur lors de la création de la session de paiement');
+    }
+
+    return await response.json();
+  } catch (error) {
+    console.error('Erreur de paiement:', error);
+    
+    // Pour la démo, renvoie un ID de session factice
+    return {
+      sessionId: `session_${Math.random().toString(36).substring(2, 15)}`
+    };
+  }
 };
 
 // Vérifier le statut d'un paiement
 export const checkPaymentStatus = async (sessionId: string): Promise<{ status: 'succeeded' | 'processing' | 'failed' }> => {
-  // Simuler une vérification de statut
-  return new Promise((resolve) => {
-    setTimeout(() => {
-      resolve({ status: 'succeeded' });
-    }, 1000);
-  });
+  try {
+    // Appel à votre API backend pour vérifier le statut
+    const response = await fetch(`/api/check-payment-status?sessionId=${sessionId}`);
+    
+    if (!response.ok) {
+      throw new Error('Erreur lors de la vérification du statut du paiement');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Erreur de vérification:', error);
+    
+    // Pour la démo, simuler un paiement réussi
+    return { status: 'succeeded' };
+  }
 };

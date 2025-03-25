@@ -7,6 +7,7 @@ import Footer from "@/components/Footer";
 import { getServiceById, Service, ServiceVariant, getServiceTypeInfo } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import ServiceVariantSelector from "@/components/ServiceVariantSelector";
+import SocialMediaLinkInput from "@/components/SocialMediaLinkInput";
 import { 
   ChevronLeft, 
   ShoppingCart, 
@@ -25,6 +26,8 @@ const ServiceDetail = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(null);
+  const [socialMediaLink, setSocialMediaLink] = useState("");
+  const [totalPrice, setTotalPrice] = useState(0);
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -36,7 +39,11 @@ const ServiceDetail = () => {
         // Sélectionner la première variante par défaut ou celle marquée comme populaire
         if (serviceData.variants && serviceData.variants.length > 0) {
           const popularVariant = serviceData.variants.find(v => v.popular);
-          setSelectedVariant(popularVariant || serviceData.variants[0]);
+          const variant = popularVariant || serviceData.variants[0];
+          setSelectedVariant(variant);
+          setTotalPrice(variant.price);
+        } else {
+          setTotalPrice(serviceData.price);
         }
       } else {
         navigate("/services");
@@ -46,14 +53,50 @@ const ServiceDetail = () => {
     window.scrollTo(0, 0);
   }, [id, navigate]);
   
-  const handleAddToCart = () => {
-    if (service) {
-      const variantInfo = selectedVariant ? ` (${selectedVariant.title})` : '';
-      toast({
-        title: "Service ajouté au panier",
-        description: `${quantity} × ${service.title}${variantInfo} a été ajouté à votre panier.`,
-      });
+  useEffect(() => {
+    // Mettre à jour le prix total lorsque la quantité ou la variante change
+    if (selectedVariant) {
+      setTotalPrice(selectedVariant.price * quantity);
+    } else if (service) {
+      setTotalPrice(service.price * quantity);
     }
+  }, [quantity, selectedVariant, service]);
+  
+  const handleAddToCart = () => {
+    if (!service) return;
+    
+    if (!socialMediaLink) {
+      toast({
+        title: "Information manquante",
+        description: "Veuillez entrer le lien de votre profil ou publication.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    const variantInfo = selectedVariant ? ` (${selectedVariant.title})` : '';
+    
+    // Créer un objet représentant l'article à ajouter au panier
+    const cartItem = {
+      service: service,
+      variant: selectedVariant,
+      quantity: quantity,
+      price: totalPrice,
+      socialMediaLink: socialMediaLink,
+    };
+    
+    // Stocker dans localStorage (version simple pour la démonstration)
+    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    existingCart.push(cartItem);
+    localStorage.setItem("cart", JSON.stringify(existingCart));
+    
+    toast({
+      title: "Service ajouté au panier",
+      description: `${quantity} × ${service.title}${variantInfo} a été ajouté à votre panier.`,
+    });
+    
+    // Rediriger vers le panier
+    navigate("/cart");
   };
   
   const getPrice = () => {
@@ -62,6 +105,8 @@ const ServiceDetail = () => {
     }
     return service?.price || 0;
   };
+  
+  const serviceType = selectedVariant?.type || service?.category;
   
   if (!service) {
     return (
@@ -141,11 +186,25 @@ const ServiceDetail = () => {
               
               <h1 className="text-3xl md:text-4xl font-bold mb-4">{service.title}</h1>
               
-              <p className="text-xl font-bold mb-4">{getPrice().toFixed(2)} €</p>
+              <div className="flex items-center mb-4">
+                <p className="text-xl font-bold">{totalPrice.toFixed(2)} €</p>
+                {quantity > 1 && selectedVariant && (
+                  <span className="text-sm text-muted-foreground ml-2">
+                    ({selectedVariant.price.toFixed(2)} € par unité)
+                  </span>
+                )}
+              </div>
               
               <p className="text-muted-foreground mb-6">
                 {service.description}
               </p>
+              
+              {/* Lien social media */}
+              <SocialMediaLinkInput 
+                value={socialMediaLink}
+                onChange={setSocialMediaLink}
+                serviceType={serviceType}
+              />
               
               {/* Variants Selector */}
               {service.variants && service.variants.length > 0 && (
@@ -153,6 +212,8 @@ const ServiceDetail = () => {
                   service={service}
                   selectedVariant={selectedVariant}
                   onSelectVariant={setSelectedVariant}
+                  quantity={quantity}
+                  onQuantityChange={setQuantity}
                 />
               )}
               

@@ -15,12 +15,16 @@ interface ServiceVariantSelectorProps {
   service: Service;
   selectedVariant: ServiceVariant | null;
   onSelectVariant: (variant: ServiceVariant) => void;
+  quantity?: number;
+  onQuantityChange?: (quantity: number) => void;
 }
 
 const ServiceVariantSelector = ({
   service,
   selectedVariant,
   onSelectVariant,
+  quantity = 1,
+  onQuantityChange,
 }: ServiceVariantSelectorProps) => {
   if (!service.variants || service.variants.length === 0) {
     return null;
@@ -97,7 +101,7 @@ const ServiceVariantSelector = ({
                 
                 <div className="flex items-center justify-between mt-2">
                   <div className="font-medium">
-                    {variant.price.toFixed(2)} €
+                    {(variant.price * (quantity || 1)).toFixed(2)} €
                   </div>
                   
                   <div className="text-xs text-muted-foreground">

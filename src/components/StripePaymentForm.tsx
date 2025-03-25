@@ -34,10 +34,23 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
     setIsProcessing(true);
 
     try {
+      // Vérifier si tous les liens sociaux sont renseignés
+      const missingLinks = paymentData.items.filter(item => !item.socialMediaLink);
+      if (missingLinks.length > 0) {
+        toast({
+          title: "Information manquante",
+          description: "Veuillez renseigner tous les liens des réseaux sociaux pour vos services.",
+          variant: "destructive",
+        });
+        setIsProcessing(false);
+        return;
+      }
+
       // Créer une session de paiement
       const { sessionId } = await createPaymentSession(paymentData);
-
-      // Simuler une charge réussie
+      
+      // Dans un environnement réel, nous utiliserions stripe.confirmCardPayment
+      // Pour le moment, nous simulons une requête réussie
       toast({
         title: "Paiement en cours de traitement",
         description: "Votre paiement est en cours de validation...",
