@@ -3,7 +3,13 @@ import React from "react";
 import { Service, ServiceVariant, getServiceTypeInfo } from "@/lib/data";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { Check } from "lucide-react";
+import { Check, Info } from "lucide-react";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ServiceVariantSelectorProps {
   service: Service;
@@ -73,14 +79,32 @@ const ServiceVariantSelector = ({
                 </p>
                 
                 {typeInfo && (
-                  <div className="flex items-center text-xs text-muted-foreground">
-                    <typeInfo.icon size={12} className="mr-1" />
-                    <span>{typeInfo.name}</span>
-                  </div>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <div className="flex items-center text-xs text-muted-foreground cursor-help">
+                          <typeInfo.icon size={12} className="mr-1" />
+                          <span>{typeInfo.name}</span>
+                          <Info size={12} className="ml-1 opacity-70" />
+                        </div>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-xs max-w-[200px]">{typeInfo.description}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 )}
                 
-                <div className="mt-2 font-medium">
-                  {variant.price.toFixed(2)} €
+                <div className="flex items-center justify-between mt-2">
+                  <div className="font-medium">
+                    {variant.price.toFixed(2)} €
+                  </div>
+                  
+                  <div className="text-xs text-muted-foreground">
+                    {variant.value && (
+                      <span>Quantité: {variant.value}</span>
+                    )}
+                  </div>
                 </div>
               </div>
               

@@ -2,7 +2,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Service } from "@/lib/data";
+import { Service, ServiceVariant } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { 
   Card, 
@@ -12,8 +12,17 @@ import {
   CardHeader, 
   CardTitle 
 } from "@/components/ui/card";
-import { Check, ShoppingCart } from "lucide-react";
+import { Check, ShoppingCart, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+  navigationMenuTriggerStyle,
+} from "@/components/ui/navigation-menu";
 
 interface ServiceCardProps {
   service: Service;
@@ -24,16 +33,28 @@ interface ServiceCardProps {
 const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps) => {
   const { toast } = useToast();
   const [imageLoaded, setImageLoaded] = useState(false);
+  const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(
+    service.variants && service.variants.length > 0 
+      ? service.variants.find(v => v.popular) || service.variants[0]
+      : null
+  );
   
   const handleAddToCart = () => {
+    const variantInfo = selectedVariant ? ` (${selectedVariant.title})` : '';
     toast({
       title: "Service ajouté au panier",
-      description: `${service.title} a été ajouté à votre panier.`,
+      description: `${service.title}${variantInfo} a été ajouté à votre panier.`,
     });
   };
   
   // Animation delay based on index for staggered entry
   const delay = index * 0.1;
+  
+  // Get current price to display
+  const currentPrice = selectedVariant ? selectedVariant.price : service.price;
+  
+  // Check if service has variants
+  const hasVariants = service.variants && service.variants.length > 0;
   
   return (
     <motion.div
@@ -101,10 +122,47 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
               </div>
             ))}
           </div>
+          
+          {hasVariants && (
+            <div className="mb-4">
+              <NavigationMenu className="max-w-full">
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="bg-muted/50 hover:bg-muted w-full justify-between">
+                      <span className="truncate max-w-[180px]">
+                        {selectedVariant?.title || "Choisir une option"}
+                      </span>
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent className="min-w-[220px] max-h-[300px] overflow-y-auto p-0">
+                      <div className="p-1">
+                        {service.variants?.map((variant) => (
+                          <button
+                            key={variant.id}
+                            onClick={() => setSelectedVariant(variant)}
+                            className={`flex items-start justify-between w-full p-2 text-left rounded-md transition-colors hover:bg-muted ${
+                              selectedVariant?.id === variant.id ? "bg-muted" : ""
+                            }`}
+                          >
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">{variant.title}</p>
+                              <p className="text-xs text-muted-foreground">{variant.description}</p>
+                            </div>
+                            <div className="text-sm font-medium whitespace-nowrap">
+                              {variant.price.toFixed(2)} €
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+            </div>
+          )}
         </CardContent>
         
         <CardFooter className="flex justify-between pt-4">
-          <div className="text-2xl font-medium">{service.price.toFixed(2)} €</div>
+          <div className="text-2xl font-medium">{currentPrice.toFixed(2)} €</div>
           <div className="flex space-x-2">
             <Button 
               variant="outline" 
