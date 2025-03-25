@@ -6,12 +6,12 @@ const TrustBadge = () => {
   return (
     <div className="w-full bg-primary/5 py-3">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 items-center">
           <motion.div 
             initial={{ scale: 0.9, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.5 }}
-            className="flex items-center mb-2 md:mb-0"
+            className="flex items-center justify-center md:justify-start"
           >
             <div className="flex">
               {[1, 2, 3, 4, 5].map((star) => (
@@ -29,7 +29,7 @@ const TrustBadge = () => {
             </span>
           </motion.div>
 
-          <div className="flex flex-row items-center space-x-4 md:space-x-6">
+          <div className="flex flex-row items-center justify-center md:justify-end space-x-4 md:space-x-6">
             <motion.div 
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
