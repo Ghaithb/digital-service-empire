@@ -3,7 +3,8 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import { CheckCircle, XCircle, Clock } from "lucide-react";
 
-type PaymentStatus = "succeeded" | "processing" | "failed";
+// Update the PaymentStatus type to match the values used in orders
+export type PaymentStatus = "succeeded" | "processing" | "failed" | "pending" | "completed";
 
 interface PaymentStatusIndicatorProps {
   status: PaymentStatus;
@@ -11,6 +12,17 @@ interface PaymentStatusIndicatorProps {
 }
 
 const PaymentStatusIndicator = ({ status, className }: PaymentStatusIndicatorProps) => {
+  // Map the order status values to our component's internal values
+  let displayStatus: "succeeded" | "processing" | "failed";
+  
+  if (status === "completed" || status === "succeeded") {
+    displayStatus = "succeeded";
+  } else if (status === "pending" || status === "processing") {
+    displayStatus = "processing";
+  } else {
+    displayStatus = "failed";
+  }
+  
   const statusConfig = {
     succeeded: {
       icon: CheckCircle,
@@ -35,7 +47,7 @@ const PaymentStatusIndicator = ({ status, className }: PaymentStatusIndicatorPro
     }
   };
 
-  const config = statusConfig[status];
+  const config = statusConfig[displayStatus];
   const Icon = config.icon;
 
   return (
