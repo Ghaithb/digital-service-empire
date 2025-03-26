@@ -1,14 +1,13 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import CartItem from "@/components/CartItem";
+import CartItemWithLink from "@/components/CartItemWithLink";
 import CheckoutForm from "@/components/CheckoutForm";
 import StripeWrapper from "@/components/StripeWrapper";
 import StripePaymentForm from "@/components/StripePaymentForm";
-import { CartItem as CartItemType, Service, getServiceById } from "@/lib/data";
+import { CartItemWithLink as CartItemType, getCart, removeFromCart, updateCartItemQuantity, updateCartItemSocialLink, clearCart } from "@/lib/cart";
 import { PaymentData } from "@/lib/stripe";
 import { createOrder, updateOrderPaymentStatus } from "@/lib/orders";
 import { Button } from "@/components/ui/button";
@@ -36,39 +35,17 @@ const Cart = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Sécuriser l'accès aux services en vérifiant qu'ils existent
-    const instagramService = getServiceById("instagram-followers-1000");
-    const facebookService = getServiceById("facebook-likes-500");
-    
-    let mockCartItems: CartItemType[] = [];
-    
-    if (instagramService) {
-      mockCartItems.push({
-        service: instagramService,
-        quantity: 1,
-        total: instagramService.price,
-      });
-    }
-    
-    if (facebookService) {
-      mockCartItems.push({
-        service: facebookService,
-        quantity: 2,
-        total: facebookService.price * 2,
-      });
-    }
-    
-    // Si aucun service n'est trouvé, utiliser un tableau vide
-    setTimeout(() => {
-      setCartItems(mockCartItems);
-      setLoading(false);
-    }, 800);
+    // Charger les articles du panier depuis localStorage
+    const loadedItems = getCart();
+    setCartItems(loadedItems);
+    setLoading(false);
     
     window.scrollTo(0, 0);
   }, []);
   
-  const handleRemoveItem = (id: string) => {
-    setCartItems(prevItems => prevItems.filter(item => item.service.id !== id));
+  const handleRemoveItem = (id: string, variantId?: string) => {
+    removeFromCart(id, variantId);
+    setCartItems(getCart());
     
     toast({
       title: "Service retiré",
@@ -76,21 +53,37 @@ const Cart = () => {
     });
   };
   
-  const handleUpdateQuantity = (id: string, quantity: number) => {
-    setCartItems(prevItems => 
-      prevItems.map(item => 
-        item.service.id === id 
-          ? { ...item, quantity, total: item.service.price * quantity } 
-          : item
-      )
-    );
+  const handleUpdateQuantity = (id: string, quantity: number, variantId?: string) => {
+    updateCartItemQuantity(id, quantity, variantId);
+    setCartItems(getCart());
+  };
+  
+  const handleUpdateSocialLink = (id: string, link: string, variantId?: string) => {
+    updateCartItemSocialLink(id, link, variantId);
+    setCartItems(getCart());
+    
+    toast({
+      title: "Lien mis à jour",
+      description: "Le lien du profil/publication a été mis à jour.",
+    });
   };
   
   const calculateTotal = () => {
-    return cartItems.reduce((total, item) => total + (item.service.price * item.quantity), 0);
+    return cartItems.reduce((total, item) => total + item.total, 0);
   };
   
   const handleProceedToCheckout = () => {
+    // Vérifier que tous les liens sociaux sont renseignés
+    const missingLinks = cartItems.filter(item => !item.socialMediaLink);
+    if (missingLinks.length > 0) {
+      toast({
+        title: "Information manquante",
+        description: "Veuillez renseigner tous les liens des réseaux sociaux pour vos services.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setShowCheckoutForm(true);
     setTimeout(() => {
       window.scrollTo({ 
@@ -130,6 +123,9 @@ const Cart = () => {
       updateOrderPaymentStatus(currentOrderId, 'completed', sessionId);
     }
     
+    // Vider le panier après un paiement réussi
+    clearCart();
+    
     navigate(`/order-confirmation?orderId=${currentOrderId}`);
   };
   
@@ -152,9 +148,10 @@ const Cart = () => {
       amount: calculateTotal(),
       items: cartItems.map(item => ({
         id: item.service.id,
-        name: item.service.title,
+        name: item.service.title + (item.variant ? ` (${item.variant.title})` : ''),
         quantity: item.quantity,
-        price: item.service.price
+        price: item.variant?.price || item.service.price,
+        socialMediaLink: item.socialMediaLink
       })),
       email: customerInfo?.email || '',
       fullName: customerInfo?.fullName || ''
@@ -192,12 +189,13 @@ const Cart = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               <div className="lg:col-span-2">
                 <div className="bg-card p-6 rounded-xl mb-6">
-                  {cartItems.map((item) => (
-                    <CartItem
-                      key={item.service.id}
+                  {cartItems.map((item, index) => (
+                    <CartItemWithLink
+                      key={`${item.service.id}-${item.variant?.id || 'standard'}-${index}`}
                       item={item}
                       onRemove={handleRemoveItem}
                       onUpdateQuantity={handleUpdateQuantity}
+                      onUpdateSocialLink={handleUpdateSocialLink}
                     />
                   ))}
                 </div>

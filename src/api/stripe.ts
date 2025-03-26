@@ -2,7 +2,6 @@
 // Ce fichier est destiné à être exécuté côté serveur.
 // Pour l'instant, il est placé ici comme référence.
 
-/* 
 import Stripe from 'stripe';
 import { PaymentData } from '../lib/stripe';
 
@@ -22,7 +21,7 @@ export const createCheckoutSession = async (paymentData: PaymentData) => {
           product_data: {
             name: item.name,
             metadata: {
-              socialMediaLink: item.socialMediaLink
+              socialMediaLink: item.socialMediaLink || ""
             }
           },
           unit_amount: Math.round(item.price * 100),
@@ -59,4 +58,3 @@ export const checkPaymentStatus = async (sessionId: string) => {
     throw new Error('Erreur lors de la vérification du statut du paiement');
   }
 };
-*/

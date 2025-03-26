@@ -1,18 +1,17 @@
 
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { CartItem } from "@/lib/data";
+import { CartItemWithLink as CartItemType } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Trash2, Link as LinkIcon, Edit } from "lucide-react";
-import { Separator } from "@/components/ui/separator";
 import SocialMediaLinkInput from "@/components/SocialMediaLinkInput";
 
 interface CartItemWithLinkProps {
-  item: CartItem & { socialMediaLink?: string; };
-  onRemove: (id: string) => void;
-  onUpdateQuantity: (id: string, quantity: number) => void;
-  onUpdateSocialLink: (id: string, link: string) => void;
+  item: CartItemType;
+  onRemove: (id: string, variantId?: string) => void;
+  onUpdateQuantity: (id: string, quantity: number, variantId?: string) => void;
+  onUpdateSocialLink: (id: string, link: string, variantId?: string) => void;
 }
 
 const CartItemWithLink = ({ 
@@ -28,11 +27,11 @@ const CartItemWithLink = ({
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity < 1) return;
     setQuantity(newQuantity);
-    onUpdateQuantity(item.service.id, newQuantity);
+    onUpdateQuantity(item.service.id, newQuantity, item.variant?.id);
   };
 
   const handleSocialLinkSave = () => {
-    onUpdateSocialLink(item.service.id, socialLink);
+    onUpdateSocialLink(item.service.id, socialLink, item.variant?.id);
     setIsEditingLink(false);
   };
 
@@ -56,16 +55,16 @@ const CartItemWithLink = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => onRemove(item.service.id)}
+              onClick={() => onRemove(item.service.id, item.variant?.id)}
               className="h-8 w-8 text-destructive hover:text-destructive"
             >
               <Trash2 size={16} />
             </Button>
           </div>
           
-          {item.service.variants && item.service.variants.length > 0 && (
+          {item.variant && (
             <p className="text-sm text-muted-foreground">
-              Option: {item.variant?.title || "Standard"}
+              Option: {item.variant.title}
             </p>
           )}
           
@@ -75,7 +74,7 @@ const CartItemWithLink = ({
                 <LinkIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input 
                   className="pl-8 py-1 h-8 text-sm"
-                  placeholder="Entrez le lien de votre profil/publication"
+                  placeholder={`Entrez le lien ${item.service.category === 'followers' ? 'de votre profil' : 'de votre publication'}`}
                   value={socialLink}
                   onChange={(e) => setSocialLink(e.target.value)}
                 />
@@ -127,7 +126,7 @@ const CartItemWithLink = ({
             </div>
             
             <div className="font-medium">
-              {(item.service.price * quantity).toFixed(2)} €
+              {item.total.toFixed(2)} €
             </div>
           </div>
         </div>

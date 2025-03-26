@@ -41,6 +41,11 @@ export const addToCart = (item: CartItemWithLink): void => {
     cart[existingItemIndex].quantity += item.quantity;
     cart[existingItemIndex].total = cart[existingItemIndex].quantity * 
       (item.variant?.price || item.service.price);
+    
+    // Ne pas écraser le lien si déjà défini
+    if (item.socialMediaLink && !cart[existingItemIndex].socialMediaLink) {
+      cart[existingItemIndex].socialMediaLink = item.socialMediaLink;
+    }
   } else {
     // Ajouter le nouvel article
     cart.push(item);
