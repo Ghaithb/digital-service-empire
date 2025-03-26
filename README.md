@@ -1,69 +1,86 @@
-# Welcome to your Lovable project
 
-## Project info
+# Digital Service Empire
 
-**URL**: https://lovable.dev/projects/b56f51ac-171b-4951-9417-26da14686ef2
+Une application web complète pour vendre des services de marketing digital, avec gestion des paiements via Stripe.
 
-## How can I edit this code?
+## Structure du projet
 
-There are several ways of editing your application.
+Le projet est organisé en deux parties principales :
 
-**Use Lovable**
+- **Frontend** : Application React avec Vite, Tailwind CSS et Shadcn UI
+- **Backend** : API REST avec Express, MongoDB et Stripe
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/b56f51ac-171b-4951-9417-26da14686ef2) and start prompting.
+## Installation et démarrage
 
-Changes made via Lovable will be committed automatically to this repo.
+### Configuration globale
 
-**Use your preferred IDE**
+1. Clonez le dépôt
+2. Installez les dépendances du projet :
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```bash
+# Installer les dépendances frontend
+cd frontend
+npm install
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+# Installer les dépendances backend
+cd ../backend
+npm install
+```
 
-Follow these steps:
+### Configuration du backend
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+1. Copiez le fichier `.env.example` en `.env` et configurez vos variables d'environnement :
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+```bash
+cd backend
+cp .env.example .env
+```
 
-# Step 3: Install the necessary dependencies.
-npm i
+2. Configurez les valeurs dans le fichier `.env` :
+   - Clés Stripe (secret et webhook)
+   - URI de connexion MongoDB
+   - Configuration d'emails
+   - URL du frontend
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+### Démarrage du projet
+
+1. Démarrez le backend :
+
+```bash
+cd backend
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+2. Démarrez le frontend :
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```bash
+cd frontend
+npm run dev
+```
 
-**Use GitHub Codespaces**
+3. Accédez à l'application dans votre navigateur à l'adresse indiquée (généralement http://localhost:8080)
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## Fonctionnalités principales
 
-## What technologies are used for this project?
+- Catalogue de services de marketing digital
+- Panier d'achat
+- Paiements sécurisés via Stripe
+- Tableau de bord administrateur
+- Notifications par email
+- Suivi des commandes
 
-This project is built with .
+## Production
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+Pour déployer en production :
 
-## How can I deploy this project?
+1. Construisez le frontend :
+```bash
+cd frontend
+npm run build
+```
 
-Simply open [Lovable](https://lovable.dev/projects/b56f51ac-171b-4951-9417-26da14686ef2) and click on Share -> Publish.
+2. Déployez le dossier `dist` généré sur votre hébergement statique
 
-## I want to use a custom domain - is that possible?
+3. Déployez le backend sur un serveur Node.js (comme Heroku, DigitalOcean, AWS, etc.)
 
-We don't support custom domains (yet). If you want to deploy your project under your own domain then we recommend using Netlify. Visit our docs for more details: [Custom domains](https://docs.lovable.dev/tips-tricks/custom-domain/)
+4. Configurez les variables d'environnement sur votre serveur de production
