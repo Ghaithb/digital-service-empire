@@ -32,6 +32,8 @@ export const createPaymentSession = async (paymentData: PaymentData): Promise<{ 
     });
 
     if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error('Erreur de paiement détails:', errorData);
       throw new Error('Erreur lors de la création de la session de paiement');
     }
 

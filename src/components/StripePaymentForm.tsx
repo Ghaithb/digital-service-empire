@@ -4,6 +4,7 @@ import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
 import { createPaymentSession, PaymentData } from "@/lib/stripe";
 import { useToast } from "@/hooks/use-toast";
+import { Shield, Lock } from "lucide-react";
 
 interface StripePaymentFormProps {
   paymentData: PaymentData;
@@ -109,9 +110,18 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
           }}
         />
       </div>
-      <div className="text-sm text-muted-foreground mb-4">
-        <p>🔒 Paiement sécurisé via Stripe. Vos données de carte sont cryptées et sécurisées.</p>
+      
+      <div className="text-sm text-muted-foreground mb-4 space-y-2">
+        <div className="flex items-center">
+          <Lock className="mr-2 h-4 w-4 text-green-500" />
+          <p>Paiement sécurisé via Stripe. Vos données de carte sont cryptées et sécurisées.</p>
+        </div>
+        <div className="flex items-center">
+          <Shield className="mr-2 h-4 w-4 text-green-500" />
+          <p>Protection anti-fraude et garantie de remboursement incluses.</p>
+        </div>
       </div>
+      
       <Button
         type="submit"
         disabled={!stripe || isProcessing}

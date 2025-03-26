@@ -38,7 +38,11 @@ export const createCheckoutSession = async (paymentData: PaymentData) => {
       metadata: {
         fullName: paymentData.fullName,
         orderId: paymentData.orderId || "",
-        allLinks: JSON.stringify(paymentData.items.map(item => item.socialMediaLink || ""))
+        allLinks: JSON.stringify(paymentData.items.map(item => ({ 
+          serviceId: item.id,
+          link: item.socialMediaLink || "",
+          quantity: item.quantity
+        })))
       },
     });
 
@@ -120,9 +124,34 @@ const sendPaymentSuccessNotification = async (session: Stripe.Checkout.Session) 
         Montant: ${(session.amount_total || 0) / 100}€
         
         Liens sociaux fournis:
-        ${allLinks.map((link: string) => `- ${link || 'Non fourni'}`).join('\n')}
+        ${typeof allLinks === 'string' 
+          ? allLinks 
+          : Array.isArray(allLinks) 
+            ? allLinks.map((item: any) => 
+                `- Service: ${item.serviceId || 'N/A'}, Lien: ${item.link || 'Non fourni'}, Quantité: ${item.quantity || 1}`
+              ).join('\n')
+            : 'Aucun lien fourni'}
         
         Merci de traiter cette commande rapidement.
+      `
+    });
+    
+    // Envoyer un email au client également
+    console.log('Envoi d\'une confirmation au client:', {
+      to: customerEmail,
+      subject: 'Votre commande est confirmée',
+      text: `
+        Bonjour ${customerName},
+        
+        Nous vous confirmons que votre paiement a bien été reçu.
+        Votre commande est en cours de traitement.
+        
+        Montant total: ${(session.amount_total || 0) / 100}€
+        
+        Nous allons traiter votre commande dans les plus brefs délais.
+        
+        Merci pour votre confiance,
+        L'équipe
       `
     });
     
