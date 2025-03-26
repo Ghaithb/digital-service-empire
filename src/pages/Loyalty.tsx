@@ -1,56 +1,239 @@
 
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import TrustBadge from "@/components/TrustBadge";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Award, Share2, Gift, Copy, Check } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Progress } from "@/components/ui/progress";
+import { Award, CreditCard, BadgePercent, Bell } from "lucide-react";
+import {
+  LoyaltyUser,
+  PointsTransaction,
+  fetchUserLoyalty,
+  createUserLoyalty,
+  getUserTransactions,
+  calculateTier,
+  loyaltyTiers,
+  trackLoyaltyEvent
+} from "../frontend/lib/loyalty";
+import LoyaltyTierCard from "../frontend/components/LoyaltyTierCard";
+import PointsHistory from "../frontend/components/PointsHistory";
+import ReferralSystem from "../frontend/components/ReferralSystem";
 
 const Loyalty = () => {
   const { toast } = useToast();
-  const [email, setEmail] = useState("");
-  const [copied, setCopied] = useState(false);
-  const referralCode = "DIGI-FRIEND";
+  const [searchParams] = useSearchParams();
+  const referralCode = searchParams.get("ref");
   
+  const [email, setEmail] = useState("");
+  const [fullName, setFullName] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [user, setUser] = useState<LoyaltyUser | null>(null);
+  const [transactions, setTransactions] = useState<PointsTransaction[]>([]);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
+
+  // Load user data if available
   useEffect(() => {
-    window.scrollTo(0, 0);
+    const checkExistingUser = async () => {
+      const savedEmail = localStorage.getItem("loyalty_email");
+      if (savedEmail) {
+        setIsLoading(true);
+        try {
+          const userData = await fetchUserLoyalty(savedEmail);
+          if (userData) {
+            setUser(userData);
+            loadUserTransactions(userData.id);
+            trackLoyaltyEvent('loyalty_page_visit', {
+              userId: userData.id,
+              email: userData.email,
+              tier: userData.tier
+            });
+          }
+        } catch (error) {
+          console.error("Error fetching user data:", error);
+        } finally {
+          setIsLoading(false);
+        }
+      }
+    };
+
+    checkExistingUser();
   }, []);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Handle referral code from URL
+  useEffect(() => {
+    if (referralCode) {
+      toast({
+        title: "Code de parrainage détecté",
+        description: `Le code "${referralCode}" sera appliqué lors de votre inscription.`,
+      });
+      
+      trackLoyaltyEvent('referral_link_visited', {
+        referralCode
+      });
+    }
+  }, [referralCode, toast]);
+
+  const loadUserTransactions = async (userId: string) => {
+    setTransactionsLoading(true);
+    try {
+      const data = await getUserTransactions(userId);
+      setTransactions(data.sort((a, b) => b.date.getTime() - a.date.getTime()));
+    } catch (error) {
+      console.error("Error loading transactions:", error);
+    } finally {
+      setTransactionsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!email) {
       toast({
         title: "Erreur",
         description: "Veuillez entrer votre adresse email.",
-        variant: "destructive"
+        variant: "destructive",
       });
       return;
     }
+
+    if (!fullName) {
+      toast({
+        title: "Erreur",
+        description: "Veuillez entrer votre nom complet.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // Check if user already exists
+      const existingUser = await fetchUserLoyalty(email);
+
+      if (existingUser) {
+        setUser(existingUser);
+        await loadUserTransactions(existingUser.id);
+        localStorage.setItem("loyalty_email", email);
+        
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue dans votre espace fidélité !",
+        });
+        
+        trackLoyaltyEvent('loyalty_login', {
+          userId: existingUser.id,
+          email: existingUser.email
+        });
+      } else {
+        // Create new user
+        const newUser = await createUserLoyalty(email, fullName);
+        setUser(newUser);
+        await loadUserTransactions(newUser.id);
+        localStorage.setItem("loyalty_email", email);
+        
+        toast({
+          title: "Inscription réussie",
+          description: "Vous êtes maintenant inscrit au programme de fidélité avec 100 points de bienvenue !",
+        });
+        
+        trackLoyaltyEvent('loyalty_signup', {
+          userId: newUser.id,
+          email: newUser.email,
+          referralCode: referralCode || null
+        });
+      }
+
+      setEmail("");
+      setFullName("");
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Un problème est survenu. Veuillez réessayer.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("loyalty_email");
+    setUser(null);
+    setTransactions([]);
     
     toast({
-      title: "Inscription réussie",
-      description: "Vous êtes maintenant inscrit au programme de fidélité.",
+      title: "Déconnexion réussie",
+      description: "Vous êtes maintenant déconnecté du programme de fidélité.",
     });
     
-    setEmail("");
-  };
-  
-  const copyReferralCode = () => {
-    navigator.clipboard.writeText(referralCode);
-    setCopied(true);
-    
-    toast({
-      title: "Code copié",
-      description: "Le code de parrainage a été copié dans le presse-papier.",
+    trackLoyaltyEvent('loyalty_logout', {
+      userId: user?.id,
+      email: user?.email
     });
-    
-    setTimeout(() => setCopied(false), 2000);
   };
+
+  const handleRefresh = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const freshUserData = await fetchUserLoyalty(user.email);
+      if (freshUserData) {
+        setUser(freshUserData);
+        await loadUserTransactions(freshUserData.id);
+        
+        toast({
+          title: "Mise à jour réussie",
+          description: "Vos données de fidélité ont été actualisées.",
+        });
+      }
+    } catch (error) {
+      toast({
+        title: "Erreur",
+        description: "Un problème est survenu lors de l'actualisation des données.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Calculate next tier info
+  const calculateNextTierInfo = () => {
+    if (!user) return null;
+    
+    const currentTierIndex = loyaltyTiers.findIndex(tier => tier.name === user.tier);
+    if (currentTierIndex === loyaltyTiers.length - 1) return null; // Already at highest tier
+    
+    const nextTier = loyaltyTiers[currentTierIndex + 1];
+    const pointsToNextTier = nextTier.minPoints - user.points;
+    const progress = ((user.points - loyaltyTiers[currentTierIndex].minPoints) / 
+      (nextTier.minPoints - loyaltyTiers[currentTierIndex].minPoints)) * 100;
+    
+    return {
+      nextTier,
+      pointsToNextTier,
+      progress: Math.max(0, Math.min(100, progress))
+    };
+  };
+
+  const nextTierInfo = user ? calculateNextTierInfo() : null;
 
   return (
     <motion.div
@@ -61,7 +244,7 @@ const Loyalty = () => {
     >
       <TrustBadge />
       <Navbar />
-      
+
       <main className="pt-32 pb-16">
         <div className="container px-4 mx-auto">
           <div className="text-center mb-12">
@@ -72,152 +255,245 @@ const Loyalty = () => {
               Gagnez des récompenses en restant fidèle à nos services et en parrainant vos amis.
             </p>
           </div>
-          
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+
+          {!user ? (
             <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
-              className="bg-card p-8 rounded-xl shadow-sm"
+              className="max-w-md mx-auto bg-card p-8 rounded-xl shadow-sm"
             >
               <div className="flex items-center mb-6">
                 <Award size={24} className="text-primary mr-3" />
-                <h2 className="text-2xl font-bold">Programme de Fidélité</h2>
+                <h2 className="text-2xl font-bold">Rejoindre le programme</h2>
               </div>
-              
-              <p className="mb-6 text-muted-foreground">
-                Rejoignez notre programme de fidélité pour accumuler des points à chaque achat et les échanger contre des réductions sur vos prochaines commandes.
-              </p>
-              
-              <div className="space-y-4 mb-6">
-                <div className="flex items-start">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 mt-0.5">
-                    <span className="font-bold">1</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Inscrivez-vous</h3>
-                    <p className="text-sm text-muted-foreground">Entrez votre email pour rejoindre le programme</p>
-                  </div>
+
+              {referralCode && (
+                <div className="mb-6 p-3 bg-primary/10 rounded-md border border-primary/20">
+                  <p className="text-sm">
+                    Vous vous inscrivez avec le code de parrainage:{" "}
+                    <span className="font-mono font-medium">{referralCode}</span>
+                  </p>
                 </div>
-                
-                <div className="flex items-start">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 mt-0.5">
-                    <span className="font-bold">2</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Cumulez des points</h3>
-                    <p className="text-sm text-muted-foreground">Gagnez 1 point pour chaque euro dépensé</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 mt-0.5">
-                    <span className="font-bold">3</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Échangez vos points</h3>
-                    <p className="text-sm text-muted-foreground">100 points = 10€ de réduction sur votre prochaine commande</p>
-                  </div>
-                </div>
-              </div>
-              
+              )}
+
               <form onSubmit={handleSubmit} className="space-y-4">
+                <div>
+                  <label htmlFor="fullName" className="block text-sm font-medium mb-1">
+                    Nom complet
+                  </label>
+                  <Input
+                    id="fullName"
+                    type="text"
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    placeholder="Votre nom complet"
+                    required
+                  />
+                </div>
+                
                 <div>
                   <label htmlFor="email" className="block text-sm font-medium mb-1">
                     Email
                   </label>
-                  <Input 
-                    id="email" 
-                    type="email" 
+                  <Input
+                    id="email"
+                    type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Votre email" 
-                    required 
+                    placeholder="Votre email"
+                    required
                   />
                 </div>
-                
-                <Button type="submit" className="w-full">
-                  Rejoindre le programme
+
+                <Button type="submit" className="w-full" disabled={isLoading}>
+                  {isLoading ? "Traitement en cours..." : "Rejoindre le programme"}
                 </Button>
               </form>
-            </motion.div>
-            
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-              className="bg-card p-8 rounded-xl shadow-sm"
-            >
-              <div className="flex items-center mb-6">
-                <Share2 size={24} className="text-primary mr-3" />
-                <h2 className="text-2xl font-bold">Programme de Parrainage</h2>
-              </div>
-              
-              <p className="mb-6 text-muted-foreground">
-                Parrainez vos amis et recevez une réduction de 10% sur votre prochaine commande pour chaque ami qui effectue un achat.
+
+              <p className="mt-4 text-xs text-center text-muted-foreground">
+                En rejoignant le programme, vous acceptez de recevoir des emails concernant
+                vos points de fidélité et les offres spéciales.
               </p>
-              
-              <div className="space-y-4 mb-6">
-                <div className="flex items-start">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 mt-0.5">
-                    <span className="font-bold">1</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Partagez votre code</h3>
-                    <p className="text-sm text-muted-foreground">Envoyez votre code de parrainage à vos amis</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 mt-0.5">
-                    <span className="font-bold">2</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Votre ami commande</h3>
-                    <p className="text-sm text-muted-foreground">Ils obtiennent 10% de réduction sur leur première commande</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mr-3 mt-0.5">
-                    <span className="font-bold">3</span>
-                  </div>
-                  <div>
-                    <h3 className="font-medium">Vous êtes récompensé</h3>
-                    <p className="text-sm text-muted-foreground">Recevez 10% de réduction sur votre prochaine commande</p>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="bg-primary/5 p-4 rounded-lg mb-6">
-                <p className="text-sm font-medium mb-2">Votre code de parrainage :</p>
-                <div className="flex">
-                  <div className="flex-1 bg-background border rounded-l-md p-2 font-mono font-medium">
-                    {referralCode}
-                  </div>
-                  <Button 
-                    variant="default" 
-                    className="rounded-l-none"
-                    onClick={copyReferralCode}
-                  >
-                    {copied ? <Check size={16} /> : <Copy size={16} />}
-                  </Button>
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <Button className="w-full" asChild>
-                  <Link to="/services">
-                    <Gift size={16} className="mr-2" />
-                    Faire une commande
-                  </Link>
-                </Button>
-              </div>
             </motion.div>
-          </div>
+          ) : (
+            <div className="space-y-8">
+              {/* User Dashboard */}
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <Card>
+                  <CardHeader>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <CardTitle className="text-2xl">Bonjour, {user.name}</CardTitle>
+                        <CardDescription>
+                          Membre depuis {user.joinDate.toLocaleDateString()}
+                        </CardDescription>
+                      </div>
+                      <Button variant="outline" size="sm" onClick={handleLogout}>
+                        Déconnexion
+                      </Button>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="grid gap-6 md:grid-cols-3">
+                      <div className="flex flex-col p-4 border rounded-lg">
+                        <div className="text-muted-foreground text-sm font-medium">Points actuels</div>
+                        <div className="text-3xl font-bold mt-1">{user.points}</div>
+                      </div>
+                      
+                      <div className="flex flex-col p-4 border rounded-lg">
+                        <div className="text-muted-foreground text-sm font-medium">Niveau de fidélité</div>
+                        <div className="text-3xl font-bold mt-1 capitalize">{user.tier}</div>
+                      </div>
+                      
+                      <div className="flex flex-col p-4 border rounded-lg">
+                        <div className="text-muted-foreground text-sm font-medium">Parrainages</div>
+                        <div className="text-3xl font-bold mt-1">{user.referrals}</div>
+                      </div>
+                    </div>
+                    
+                    {nextTierInfo && (
+                      <div className="mt-6 p-4 border rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium">
+                            Progression vers le niveau {nextTierInfo.nextTier.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {user.points} / {nextTierInfo.nextTier.minPoints} points
+                          </span>
+                        </div>
+                        <Progress value={nextTierInfo.progress} className="h-2" />
+                        <p className="mt-2 text-xs text-muted-foreground">
+                          Il vous manque <span className="font-medium">{nextTierInfo.pointsToNextTier} points</span> pour atteindre le niveau suivant
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                  <CardFooter className="flex justify-between">
+                    <Button variant="outline" onClick={handleRefresh} disabled={isLoading}>
+                      {isLoading ? "Actualisation..." : "Actualiser"}
+                    </Button>
+                    <Button variant="outline" className="gap-1">
+                      <Bell className="h-4 w-4 mr-1" />
+                      Activer les notifications
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+
+              {/* Tabs for different sections */}
+              <Tabs defaultValue="tiers" className="w-full">
+                <TabsList className="grid grid-cols-3 mb-8">
+                  <TabsTrigger value="tiers" className="gap-1">
+                    <Award className="h-4 w-4 mr-1" />
+                    Niveaux de fidélité
+                  </TabsTrigger>
+                  <TabsTrigger value="referrals" className="gap-1">
+                    <BadgePercent className="h-4 w-4 mr-1" />
+                    Parrainage
+                  </TabsTrigger>
+                  <TabsTrigger value="history" className="gap-1">
+                    <CreditCard className="h-4 w-4 mr-1" />
+                    Historique des points
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="tiers" className="space-y-4">
+                  <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+                    {loyaltyTiers.map((tier) => (
+                      <LoyaltyTierCard
+                        key={tier.name}
+                        tier={tier}
+                        isCurrentTier={tier.name === user.tier}
+                        isNextTier={nextTierInfo?.nextTier.name === tier.name}
+                        pointsToNextTier={nextTierInfo?.nextTier.name === tier.name ? nextTierInfo.pointsToNextTier : undefined}
+                      />
+                    ))}
+                  </div>
+                  
+                  <Card className="mt-8">
+                    <CardHeader>
+                      <CardTitle>Comment gagner plus de points</CardTitle>
+                      <CardDescription>
+                        Voici différentes façons d'augmenter votre solde de points
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <ul className="grid gap-4 md:grid-cols-2">
+                        <li className="flex items-start gap-2">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                            <CreditCard className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium">Effectuez des achats</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Gagnez des points à chaque achat selon votre niveau de fidélité
+                            </p>
+                          </div>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                            <BadgePercent className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium">Parrainez des amis</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Recevez jusqu'à 600 points pour chaque ami qui rejoint avec votre code
+                            </p>
+                          </div>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                            <Bell className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium">Participez aux événements</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Obtenez des points bonus lors des promotions spéciales et événements
+                            </p>
+                          </div>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center mt-0.5">
+                            <Award className="h-4 w-4 text-primary" />
+                          </div>
+                          <div>
+                            <h3 className="font-medium">Montez de niveau</h3>
+                            <p className="text-sm text-muted-foreground">
+                              Accumulez plus de points pour atteindre des niveaux supérieurs avec de meilleurs avantages
+                            </p>
+                          </div>
+                        </li>
+                      </ul>
+                    </CardContent>
+                  </Card>
+                </TabsContent>
+                
+                <TabsContent value="referrals">
+                  <ReferralSystem 
+                    referralCode={user.referralCode}
+                    referrals={user.referrals}
+                    userName={user.email}
+                    onSuccess={handleRefresh}
+                  />
+                </TabsContent>
+                
+                <TabsContent value="history">
+                  <PointsHistory 
+                    transactions={transactions}
+                    isLoading={transactionsLoading}
+                  />
+                </TabsContent>
+              </Tabs>
+            </div>
+          )}
         </div>
       </main>
-      
+
       <Footer />
     </motion.div>
   );

@@ -10,7 +10,7 @@ import Services from "../pages/Services";
 import ServiceDetail from "../pages/ServiceDetail";
 import Cart from "../pages/Cart";
 import About from "../pages/About";
-import NotFound from "./pages/NotFound";
+import NotFound from "../pages/NotFound";
 import Legal from "../pages/Legal";
 import OrderConfirmation from "../pages/OrderConfirmation";
 import Dashboard from "../pages/Dashboard";

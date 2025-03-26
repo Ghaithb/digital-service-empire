@@ -55,6 +55,30 @@ const serviceSchema = new mongoose.Schema({
 
 const Service = mongoose.model('Service', serviceSchema);
 
+// Nouveaux schémas pour le système de fidélité
+const loyaltyUserSchema = new mongoose.Schema({
+  id: String,
+  email: { type: String, unique: true },
+  name: String,
+  points: { type: Number, default: 0 },
+  tier: { type: String, enum: ['bronze', 'silver', 'gold', 'platinum'], default: 'bronze' },
+  referralCode: { type: String, unique: true },
+  referrals: { type: Number, default: 0 },
+  joinDate: { type: Date, default: Date.now }
+});
+
+const pointsTransactionSchema = new mongoose.Schema({
+  id: String,
+  userId: String,
+  amount: Number,
+  type: { type: String, enum: ['earned', 'spent', 'referral', 'signup'] },
+  description: String,
+  date: { type: Date, default: Date.now }
+});
+
+const LoyaltyUser = mongoose.model('LoyaltyUser', loyaltyUserSchema);
+const PointsTransaction = mongoose.model('PointsTransaction', pointsTransactionSchema);
+
 // Configuration de Nodemailer
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
@@ -65,6 +89,23 @@ const transporter = nodemailer.createTransport({
     pass: process.env.EMAIL_PASS
   }
 });
+
+// Helper functions for loyalty
+const calculateTier = (points) => {
+  if (points >= 5000) return 'platinum';
+  if (points >= 1000) return 'gold';
+  if (points >= 500) return 'silver';
+  return 'bronze';
+};
+
+const generateReferralCode = () => {
+  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let result = 'REF-';
+  for (let i = 0; i < 6; i++) {
+    result += characters.charAt(Math.floor(Math.random() * characters.length));
+  }
+  return result;
+};
 
 // Endpoint pour créer une session de paiement Stripe
 app.post('/api/create-checkout-session', async (req, res) => {
@@ -141,6 +182,45 @@ app.get('/api/check-payment-status', async (req, res) => {
       );
       
       await sendPaymentSuccessNotification(session);
+      
+      // Ajouter des points de fidélité si l'utilisateur existe
+      if (session.customer_email) {
+        try {
+          const loyaltyUser = await LoyaltyUser.findOne({ email: session.customer_email });
+          
+          if (loyaltyUser) {
+            const amount = session.amount_total / 100;
+            // Points earned depend on tier
+            let pointMultiplier = 1;
+            if (loyaltyUser.tier === 'silver') pointMultiplier = 1.5;
+            if (loyaltyUser.tier === 'gold') pointMultiplier = 2;
+            if (loyaltyUser.tier === 'platinum') pointMultiplier = 3;
+            
+            const pointsEarned = Math.round(amount * pointMultiplier);
+            
+            loyaltyUser.points += pointsEarned;
+            loyaltyUser.tier = calculateTier(loyaltyUser.points);
+            await loyaltyUser.save();
+            
+            // Create points transaction
+            const transaction = new PointsTransaction({
+              id: `tx_${Date.now()}`,
+              userId: loyaltyUser.id,
+              amount: pointsEarned,
+              type: 'earned',
+              description: `Achat de ${amount}€`,
+              date: new Date()
+            });
+            
+            await transaction.save();
+            
+            // Send notification email about earned points
+            await sendLoyaltyPointsNotification(loyaltyUser.email, pointsEarned, loyaltyUser.points);
+          }
+        } catch (loyaltyError) {
+          console.error('Erreur lors de l\'ajout des points de fidélité:', loyaltyError);
+        }
+      }
     }
     
     res.json({ 
@@ -227,6 +307,160 @@ app.put('/api/orders/:id', async (req, res) => {
     res.json(updatedOrder);
   } catch (error) {
     res.status(500).json({ error: 'Erreur lors de la mise à jour de la commande' });
+  }
+});
+
+// Nouveaux endpoints pour le système de fidélité
+app.post('/api/loyalty/register', async (req, res) => {
+  try {
+    const { email, name, referralCode } = req.body;
+    
+    // Vérifier si l'utilisateur existe déjà
+    let user = await LoyaltyUser.findOne({ email });
+    
+    if (user) {
+      return res.json({ user, message: 'Utilisateur déjà inscrit' });
+    }
+    
+    // Créer un nouvel utilisateur
+    const userId = `user_${Date.now()}`;
+    user = new LoyaltyUser({
+      id: userId,
+      email,
+      name,
+      points: 100, // Welcome bonus
+      tier: 'bronze',
+      referralCode: generateReferralCode(),
+      referrals: 0,
+      joinDate: new Date()
+    });
+    
+    await user.save();
+    
+    // Ajouter la transaction de bienvenue
+    const transaction = new PointsTransaction({
+      id: `tx_${Date.now()}`,
+      userId,
+      amount: 100,
+      type: 'signup',
+      description: 'Bienvenue au programme de fidélité',
+      date: new Date()
+    });
+    
+    await transaction.save();
+    
+    // Vérifier le code de parrainage
+    if (referralCode) {
+      const referrer = await LoyaltyUser.findOne({ referralCode });
+      
+      if (referrer) {
+        // Points awarded depend on tier
+        let referralPoints = 200;
+        if (referrer.tier === 'gold') referralPoints = 400;
+        if (referrer.tier === 'platinum') referralPoints = 600;
+        
+        referrer.points += referralPoints;
+        referrer.referrals += 1;
+        referrer.tier = calculateTier(referrer.points);
+        await referrer.save();
+        
+        // Créer une transaction pour le parrain
+        const referralTransaction = new PointsTransaction({
+          id: `tx_${Date.now() + 1}`,
+          userId: referrer.id,
+          amount: referralPoints,
+          type: 'referral',
+          description: `Parrainage de ${email}`,
+          date: new Date()
+        });
+        
+        await referralTransaction.save();
+        
+        // Envoyer une notification au parrain
+        await sendReferralNotification(referrer.email, email, referralPoints);
+      }
+    }
+    
+    // Envoyer un email de bienvenue
+    await sendWelcomeLoyaltyEmail(email, name);
+    
+    res.status(201).json({ user, message: 'Inscription réussie avec 100 points de bienvenue' });
+  } catch (error) {
+    console.error('Erreur lors de l\'inscription:', error);
+    res.status(500).json({ error: 'Erreur lors de l\'inscription au programme de fidélité' });
+  }
+});
+
+app.get('/api/loyalty/user/:email', async (req, res) => {
+  try {
+    const user = await LoyaltyUser.findOne({ email: req.params.email });
+    
+    if (!user) {
+      return res.status(404).json({ error: 'Utilisateur non trouvé' });
+    }
+    
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la récupération des données de fidélité' });
+  }
+});
+
+app.get('/api/loyalty/transactions/:userId', async (req, res) => {
+  try {
+    const transactions = await PointsTransaction.find({ userId: req.params.userId })
+      .sort({ date: -1 });
+    
+    res.json(transactions);
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur lors de la récupération des transactions' });
+  }
+});
+
+app.post('/api/loyalty/redeem-referral', async (req, res) => {
+  try {
+    const { referralCode, email } = req.body;
+    
+    // Vérifier si le code existe
+    const referrer = await LoyaltyUser.findOne({ referralCode });
+    
+    if (!referrer) {
+      return res.status(404).json({ error: 'Code de parrainage invalide' });
+    }
+    
+    // Vérifier que l'utilisateur ne s'auto-parraine pas
+    if (referrer.email === email) {
+      return res.status(400).json({ error: 'Vous ne pouvez pas utiliser votre propre code de parrainage' });
+    }
+    
+    // Mettre à jour les informations du parrain
+    let referralPoints = 200;
+    if (referrer.tier === 'gold') referralPoints = 400;
+    if (referrer.tier === 'platinum') referralPoints = 600;
+    
+    referrer.points += referralPoints;
+    referrer.referrals += 1;
+    referrer.tier = calculateTier(referrer.points);
+    await referrer.save();
+    
+    // Créer une transaction pour le parrain
+    const transaction = new PointsTransaction({
+      id: `tx_${Date.now()}`,
+      userId: referrer.id,
+      amount: referralPoints,
+      type: 'referral',
+      description: `Parrainage de ${email}`,
+      date: new Date()
+    });
+    
+    await transaction.save();
+    
+    // Envoyer une notification au parrain
+    await sendReferralNotification(referrer.email, email, referralPoints);
+    
+    res.json({ success: true, message: 'Code de parrainage validé avec succès' });
+  } catch (error) {
+    console.error('Erreur lors de la validation du code de parrainage:', error);
+    res.status(500).json({ error: 'Erreur lors de la validation du code de parrainage' });
   }
 });
 
@@ -356,6 +590,77 @@ const sendPaymentSuccessNotification = async (session) => {
     console.log('Notifications de paiement réussi envoyées avec succès');
   } catch (error) {
     console.error('Erreur lors de l\'envoi des notifications:', error);
+  }
+};
+
+// Nouvelles fonctions pour les notifications du programme de fidélité
+const sendWelcomeLoyaltyEmail = async (email, name) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: 'Bienvenue dans notre programme de fidélité',
+      html: `
+        <h2>Bienvenue, ${name}!</h2>
+        <p>Merci de vous être inscrit à notre programme de fidélité.</p>
+        <p>Vous avez reçu 100 points de bienvenue pour démarrer.</p>
+        <p>Vous pouvez gagner plus de points en:</p>
+        <ul>
+          <li>Effectuant des achats sur notre site</li>
+          <li>Parrainant vos amis</li>
+          <li>Participant à nos événements spéciaux</li>
+        </ul>
+        <p>Visitez votre <a href="${process.env.FRONTEND_URL}/loyalty">espace fidélité</a> pour voir votre solde de points et vos avantages.</p>
+        <p>Merci,<br>L'équipe</p>
+      `
+    });
+    
+    console.log('Email de bienvenue envoyé avec succès');
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi de l\'email de bienvenue:', error);
+  }
+};
+
+const sendLoyaltyPointsNotification = async (email, pointsEarned, totalPoints) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: 'Vous avez gagné des points de fidélité',
+      html: `
+        <h2>Félicitations!</h2>
+        <p>Vous venez de gagner <strong>${pointsEarned} points</strong> pour votre achat récent.</p>
+        <p>Votre solde actuel est de <strong>${totalPoints} points</strong>.</p>
+        <p>Visitez votre <a href="${process.env.FRONTEND_URL}/loyalty">espace fidélité</a> pour voir vos avantages.</p>
+        <p>Merci,<br>L'équipe</p>
+      `
+    });
+    
+    console.log('Notification de points envoyée avec succès');
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi de la notification de points:', error);
+  }
+};
+
+const sendReferralNotification = async (email, referredEmail, pointsEarned) => {
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_FROM,
+      to: email,
+      subject: 'Votre parrainage a été validé!',
+      html: `
+        <h2>Félicitations!</h2>
+        <p>Votre ami (${referredEmail}) vient de rejoindre notre programme de fidélité grâce à votre parrainage.</p>
+        <p>Vous avez gagné <strong>${pointsEarned} points</strong> en récompense!</p>
+        <p>Continuez à parrainer vos amis pour gagner encore plus de points.</p>
+        <p>Visitez votre <a href="${process.env.FRONTEND_URL}/loyalty">espace fidélité</a> pour voir votre solde mis à jour.</p>
+        <p>Merci,<br>L'équipe</p>
+      `
+    });
+    
+    console.log('Notification de parrainage envoyée avec succès');
+  } catch (error) {
+    console.error('Erreur lors de l\'envoi de la notification de parrainage:', error);
   }
 };
 
