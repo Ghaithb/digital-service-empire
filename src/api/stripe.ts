@@ -7,7 +7,7 @@ import { PaymentData } from '../lib/stripe';
 
 // Clé secrète Stripe (à utiliser uniquement côté serveur)
 const stripe = new Stripe('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', {
-  apiVersion: '2024-03-01',
+  apiVersion: '2025-02-24.acacia',
 });
 
 // Créer une session de paiement
