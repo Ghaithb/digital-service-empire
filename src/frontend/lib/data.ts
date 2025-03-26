@@ -883,4 +883,343 @@ export const services: Service[] = [
       },
       {
         id: 'instagram-package-premium',
-        title
+        title: 'Pack Premium Réel',
+        description: '500 Followers réels + 300 Likes réels + 15 Commentaires personnalisés',
+        type: 'real',
+        price: 99.99,
+        value: 1,
+      },
+      {
+        id: 'instagram-package-viral',
+        title: 'Pack Viral',
+        description: '2000 Followers + 1000 Likes + 1000 Vues Stories + 30 Commentaires',
+        type: 'automated',
+        price: 149.99,
+        value: 1,
+      },
+    ],
+  },
+  {
+    id: 'tiktok-package',
+    title: 'Pack TikTok Complet',
+    description: 'Solution tout-en-un pour maximiser votre présence sur TikTok et améliorer vos statistiques.',
+    category: 'custom',
+    platform: 'tiktok',
+    price: 69.99,
+    icon: BarChart,
+    imageUrl: 'https://images.unsplash.com/photo-1598550476439-6847785fcea6?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    popular: true,
+    features: [
+      'Boost complet du profil',
+      'Augmentation de l\'engagement',
+      'Amélioration du classement',
+      'Rapport détaillé',
+    ],
+    deliveryTime: '4-6 jours',
+    variants: [
+      {
+        id: 'tiktok-package-starter',
+        title: 'Pack Starter',
+        description: '500 Abonnés + 1000 Vues + 100 Likes',
+        type: 'automated',
+        price: 39.99,
+        value: 1,
+        popular: true,
+      },
+      {
+        id: 'tiktok-package-pro',
+        title: 'Pack Pro',
+        description: '1000 Abonnés + 5000 Vues + 300 Likes',
+        type: 'automated',
+        price: 69.99,
+        value: 1,
+      },
+      {
+        id: 'tiktok-package-viral',
+        title: 'Pack Viral',
+        description: '2000 Abonnés + 10000 Vues + 500 Likes + 50 Commentaires',
+        type: 'automated',
+        price: 119.99,
+        value: 1,
+      },
+    ],
+  },
+  {
+    id: 'instagram-premium',
+    title: 'Service Premium Instagram',
+    description: 'Service haut de gamme avec ciblage géographique et démographique pour des résultats optimaux et durables.',
+    category: 'premium',
+    platform: 'instagram',
+    price: 149.99,
+    icon: Award,
+    imageUrl: 'https://images.unsplash.com/photo-1552248524-10d9a7e4841c?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    popular: false,
+    features: [
+      'Ciblage géographique précis',
+      'Segmentation démographique',
+      'Interaction organique',
+      'Suivi personnalisé',
+    ],
+    deliveryTime: '7-10 jours',
+    variants: [
+      {
+        id: 'instagram-geo-followers-500',
+        title: '500 Followers Ciblés',
+        description: 'Followers ciblés par pays ou région spécifique',
+        type: 'targeted',
+        price: 99.99,
+        value: 500,
+        popular: true,
+      },
+      {
+        id: 'instagram-geo-followers-1000',
+        title: '1000 Followers Ciblés',
+        description: 'Followers ciblés par pays ou région spécifique',
+        type: 'targeted',
+        price: 149.99,
+        value: 1000,
+      },
+      {
+        id: 'instagram-organic-growth',
+        title: 'Croissance Organique 30j',
+        description: 'Service d\'automatisation pour attirer des followers réels pendant 30 jours',
+        type: 'real',
+        price: 199.99,
+        value: 30,
+      },
+    ],
+  },
+  {
+    id: 'spotify-followers',
+    title: 'Abonnés Spotify',
+    description: 'Augmentez votre nombre d\'abonnés sur Spotify pour gagner en crédibilité et attirer plus d\'auditeurs vers votre musique.',
+    category: 'followers',
+    platform: 'spotify',
+    price: 19.99,
+    icon: User,
+    imageUrl: 'https://images.unsplash.com/photo-1614680376573-df3480f0c6ff?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    popular: true,
+    features: [
+      'Abonnés organiques',
+      'Progression naturelle',
+      'Amélioration de votre visibilité',
+      'Support client 24/7',
+    ],
+    deliveryTime: '2-4 jours',
+    variants: [
+      {
+        id: 'spotify-followers-100',
+        title: '100 Abonnés',
+        description: 'Parfait pour démarrer et améliorer votre visibilité',
+        type: 'real',
+        price: 9.99,
+        value: 100,
+      },
+      {
+        id: 'spotify-followers-500',
+        title: '500 Abonnés',
+        description: 'Idéal pour renforcer votre présence',
+        type: 'real',
+        price: 29.99,
+        value: 500,
+        popular: true,
+      },
+      {
+        id: 'spotify-followers-1000',
+        title: '1000 Abonnés',
+        description: 'Donnez un sérieux boost à votre profil',
+        type: 'real',
+        price: 49.99,
+        value: 1000,
+      },
+    ],
+  },
+  {
+    id: 'spotify-plays',
+    title: 'Écoutes Spotify',
+    description: 'Augmentez le nombre d\'écoutes sur vos titres pour améliorer votre classement et attirer l\'attention des algorithmes.',
+    category: 'views',
+    platform: 'spotify',
+    price: 24.99,
+    icon: Play,
+    imageUrl: 'https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    popular: true,
+    features: [
+      'Écoutes réelles',
+      'Amélioration de l\'algorithme',
+      'Augmentation de la popularité',
+      'Rapport détaillé',
+    ],
+    deliveryTime: '1-3 jours',
+    variants: [
+      {
+        id: 'spotify-plays-1000',
+        title: '1000 Écoutes',
+        description: 'Boostez vos statistiques initiales',
+        type: 'real',
+        price: 14.99,
+        value: 1000,
+      },
+      {
+        id: 'spotify-plays-5000',
+        title: '5000 Écoutes',
+        description: 'Amplifiez votre audience d\'auditeurs',
+        type: 'real',
+        price: 29.99,
+        value: 5000,
+        popular: true,
+      },
+      {
+        id: 'spotify-plays-10000',
+        title: '10000 Écoutes',
+        description: 'Maximisez l\'impact de vos titres',
+        type: 'real',
+        price: 49.99,
+        value: 10000,
+      },
+    ],
+  },
+  {
+    id: 'spotify-saves',
+    title: 'Saves Spotify',
+    description: 'Augmentez le nombre de fois où vos titres sont sauvegardés dans les playlists des utilisateurs.',
+    category: 'likes',
+    platform: 'spotify',
+    price: 19.99,
+    icon: Bookmark,
+    imageUrl: 'https://images.unsplash.com/photo-1502773860571-211a597d6e4b?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    popular: false,
+    features: [
+      'Ajouts authentiques',
+      'Distribution progressive',
+      'Amélioration de l\'algorithme',
+      'Support réactif',
+    ],
+    deliveryTime: '2-3 jours',
+    variants: [
+      {
+        id: 'spotify-saves-100',
+        title: '100 Saves',
+        description: 'Idéal pour le lancement d\'un nouveau titre',
+        type: 'real',
+        price: 9.99,
+        value: 100,
+      },
+      {
+        id: 'spotify-saves-500',
+        title: '500 Saves',
+        description: 'Augmentez significativement vos statistiques',
+        type: 'real',
+        price: 29.99,
+        value: 500,
+        popular: true,
+      },
+      {
+        id: 'spotify-saves-1000',
+        title: '1000 Saves',
+        description: 'Donnez un impact majeur à vos titres',
+        type: 'real',
+        price: 49.99,
+        value: 1000,
+      },
+    ],
+  },
+  {
+    id: 'spotify-playlist',
+    title: 'Placement en Playlist',
+    description: 'Placez vos titres dans des playlists populaires pour augmenter votre visibilité et toucher de nouveaux auditeurs.',
+    category: 'premium',
+    platform: 'spotify',
+    price: 99.99,
+    icon: BarChart,
+    imageUrl: 'https://images.unsplash.com/photo-1616356607338-fd15bc702d4e?w=800&auto=format&fit=crop&q=60&ixlib=rb-4.0.3',
+    popular: true,
+    features: [
+      'Playlists ciblées',
+      'Exposition organique',
+      'Analyse de performance',
+      'Support prioritaire',
+    ],
+    deliveryTime: '5-10 jours',
+    variants: [
+      {
+        id: 'spotify-playlist-small',
+        title: 'Playlists débutantes',
+        description: 'Placement dans 3-5 playlists de 1000-5000 followers',
+        type: 'targeted',
+        price: 79.99,
+        value: 1,
+      },
+      {
+        id: 'spotify-playlist-medium',
+        title: 'Playlists moyennes',
+        description: 'Placement dans 3-5 playlists de 5000-15000 followers',
+        type: 'targeted',
+        price: 149.99,
+        value: 1,
+        popular: true,
+      },
+      {
+        id: 'spotify-playlist-large',
+        title: 'Playlists populaires',
+        description: 'Placement dans 2-3 playlists de plus de 15000 followers',
+        type: 'targeted',
+        price: 249.99,
+        value: 1,
+      },
+    ],
+  },
+];
+
+export const testimonials = [
+  {
+    id: '1',
+    name: 'Sophie Martin',
+    role: 'Influenceuse Mode',
+    comment: 'Les services ont transformé ma présence sur Instagram. J\'ai vu mon engagement augmenter de 200% en un mois seulement. Je recommande vivement!',
+    avatar: 'https://randomuser.me/api/portraits/women/44.jpg',
+    rating: 5,
+  },
+  {
+    id: '2',
+    name: 'Thomas Dubois',
+    role: 'YouTuber Tech',
+    comment: 'Impressionné par la qualité et la rapidité du service. Mes vidéos sont maintenant recommandées à un public beaucoup plus large.',
+    avatar: 'https://randomuser.me/api/portraits/men/32.jpg',
+    rating: 5,
+  },
+  {
+    id: '3',
+    name: 'Emma Leroy',
+    role: 'Artiste',
+    comment: 'J\'étais sceptique au début, mais les résultats sont indéniables. Mon audience a grandi de manière organique après avoir utilisé ces services.',
+    avatar: 'https://randomuser.me/api/portraits/women/63.jpg',
+    rating: 4,
+  },
+];
+
+export const getServiceById = (id: string): Service | undefined => {
+  return services.find(service => service.id === id);
+};
+
+export const getServicesByCategory = (category: ServiceCategory): Service[] => {
+  return services.filter(service => service.category === category);
+};
+
+export const getServicesByPlatform = (platform: SocialPlatform): Service[] => {
+  return services.filter(service => service.platform === platform);
+};
+
+export const getPopularServices = (): Service[] => {
+  return services.filter(service => service.popular);
+};
+
+export const getServiceVariantById = (serviceId: string, variantId: string): ServiceVariant | undefined => {
+  const service = getServiceById(serviceId);
+  if (!service || !service.variants) return undefined;
+  return service.variants.find(variant => variant.id === variantId);
+};
+
+export const getServiceTypeInfo = (type: ServiceType) => {
+  return serviceTypes.find(t => t.id === type);
+};
