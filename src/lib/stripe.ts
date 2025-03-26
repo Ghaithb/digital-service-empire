@@ -16,12 +16,13 @@ export interface PaymentData {
   }>;
   email: string;
   fullName: string;
+  orderId?: string;
 }
 
 // Fonction pour créer une session de paiement
 export const createPaymentSession = async (paymentData: PaymentData): Promise<{ sessionId: string }> => {
   try {
-    // Appel à votre API backend pour créer une session Stripe
+    // En production, appel à votre API backend pour créer une session Stripe
     const response = await fetch('/api/create-checkout-session', {
       method: 'POST',
       headers: {
@@ -39,6 +40,7 @@ export const createPaymentSession = async (paymentData: PaymentData): Promise<{ 
     console.error('Erreur de paiement:', error);
     
     // Pour la démo, renvoie un ID de session factice
+    // En production, ne jamais simuler un ID de session
     return {
       sessionId: `session_${Math.random().toString(36).substring(2, 15)}`
     };
@@ -48,7 +50,7 @@ export const createPaymentSession = async (paymentData: PaymentData): Promise<{ 
 // Vérifier le statut d'un paiement
 export const checkPaymentStatus = async (sessionId: string): Promise<{ status: 'succeeded' | 'processing' | 'failed' }> => {
   try {
-    // Appel à votre API backend pour vérifier le statut
+    // En production, appel à votre API backend pour vérifier le statut
     const response = await fetch(`/api/check-payment-status?sessionId=${sessionId}`);
     
     if (!response.ok) {
@@ -60,6 +62,7 @@ export const checkPaymentStatus = async (sessionId: string): Promise<{ status: '
     console.error('Erreur de vérification:', error);
     
     // Pour la démo, simuler un paiement réussi
+    // En production, obtenir le vrai statut depuis l'API
     return { status: 'succeeded' };
   }
 };

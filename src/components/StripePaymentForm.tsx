@@ -49,23 +49,41 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
       // Créer une session de paiement
       const { sessionId } = await createPaymentSession(paymentData);
       
-      // Dans un environnement réel, nous utiliserions stripe.confirmCardPayment
-      // Pour le moment, nous simulons une requête réussie
-      toast({
-        title: "Paiement en cours de traitement",
-        description: "Votre paiement est en cours de validation...",
-      });
+      // Dans un environnement de production, nous utiliserions stripe.redirectToCheckout
+      // Pour rediriger vers la page de paiement Stripe
+      if (process.env.NODE_ENV === 'production') {
+        const { error } = await stripe.redirectToCheckout({
+          sessionId: sessionId
+        });
+        
+        if (error) {
+          toast({
+            title: "Erreur de redirection",
+            description: error.message || "Une erreur est survenue lors de la redirection vers Stripe.",
+            variant: "destructive",
+          });
+          onError(error.message || "Erreur de redirection");
+          setIsProcessing(false);
+          return;
+        }
+      } else {
+        // Pour la démo, simuler une requête réussie
+        toast({
+          title: "Paiement en cours de traitement",
+          description: "Votre paiement est en cours de validation...",
+        });
 
-      setTimeout(() => {
-        onSuccess(sessionId);
-      }, 2000);
+        setTimeout(() => {
+          onSuccess(sessionId);
+        }, 2000);
+      }
     } catch (error) {
       toast({
         title: "Erreur de paiement",
         description: "Une erreur est survenue lors du traitement du paiement.",
         variant: "destructive",
       });
-      onError("Erreur lors du traitement de votre paiement");
+      onError(typeof error === 'string' ? error : "Erreur lors du traitement de votre paiement");
       setIsProcessing(false);
     }
   };
@@ -87,8 +105,12 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
                 color: '#9e2146',
               },
             },
+            hidePostalCode: true,
           }}
         />
+      </div>
+      <div className="text-sm text-muted-foreground mb-4">
+        <p>🔒 Paiement sécurisé via Stripe. Vos données de carte sont cryptées et sécurisées.</p>
       </div>
       <Button
         type="submit"

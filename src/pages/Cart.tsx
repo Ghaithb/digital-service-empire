@@ -35,7 +35,6 @@ const Cart = () => {
   const navigate = useNavigate();
   
   useEffect(() => {
-    // Charger les articles du panier depuis localStorage
     const loadedItems = getCart();
     setCartItems(loadedItems);
     setLoading(false);
@@ -73,7 +72,6 @@ const Cart = () => {
   };
   
   const handleProceedToCheckout = () => {
-    // Vérifier que tous les liens sociaux sont renseignés
     const missingLinks = cartItems.filter(item => !item.socialMediaLink);
     if (missingLinks.length > 0) {
       toast({
@@ -123,7 +121,6 @@ const Cart = () => {
       updateOrderPaymentStatus(currentOrderId, 'completed', sessionId);
     }
     
-    // Vider le panier après un paiement réussi
     clearCart();
     
     navigate(`/order-confirmation?orderId=${currentOrderId}`);
@@ -154,7 +151,8 @@ const Cart = () => {
         socialMediaLink: item.socialMediaLink
       })),
       email: customerInfo?.email || '',
-      fullName: customerInfo?.fullName || ''
+      fullName: customerInfo?.fullName || '',
+      orderId: currentOrderId || undefined
     };
   };
 
