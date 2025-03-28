@@ -6,6 +6,7 @@ import { Menu, X, ShoppingCart, ChevronDown } from "lucide-react";
 import { socialPlatforms, serviceCategories } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getCart } from "@/lib/cart";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -24,6 +25,7 @@ import {
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
+  const [cartItemCount, setCartItemCount] = useState(0);
   const location = useLocation();
   
   // Track scrolling to change navbar appearance
@@ -39,6 +41,23 @@ const Navbar = () => {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+  
+  // Update cart count whenever location changes or component mounts
+  useEffect(() => {
+    const updateCartCount = () => {
+      const cart = getCart();
+      const count = cart.reduce((total, item) => total + item.quantity, 0);
+      setCartItemCount(count);
+    };
+    
+    // Initial count
+    updateCartCount();
+    
+    // Setup interval to check for changes
+    const intervalId = setInterval(updateCartCount, 1000);
+    
+    return () => clearInterval(intervalId);
+  }, [location]);
   
   // Close menu when location changes
   useEffect(() => {
@@ -227,9 +246,11 @@ const Navbar = () => {
           <Link to="/cart">
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart size={20} />
-              <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                0
-              </span>
+              {cartItemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-primary text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+                  {cartItemCount}
+                </span>
+              )}
             </Button>
           </Link>
           

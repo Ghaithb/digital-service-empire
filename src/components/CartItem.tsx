@@ -1,27 +1,27 @@
 
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { CartItem as CartItemType } from "@/lib/data";
+import { CartItemWithLink } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Trash2, Plus, Minus } from "lucide-react";
 
 interface CartItemProps {
-  item: CartItemType;
-  onRemove: (id: string) => void;
-  onUpdateQuantity: (id: string, quantity: number) => void;
+  item: CartItemWithLink;
+  onRemove: (serviceId: string, variantId?: string) => void;
+  onUpdateQuantity: (serviceId: string, quantity: number, variantId?: string) => void;
 }
 
 const CartItem = ({ item, onRemove, onUpdateQuantity }: CartItemProps) => {
-  const { service, quantity } = item;
+  const { service, variant, quantity } = item;
   const [imageLoaded, setImageLoaded] = useState(false);
   
   const handleIncrement = () => {
-    onUpdateQuantity(service.id, quantity + 1);
+    onUpdateQuantity(service.id, quantity + 1, variant?.id);
   };
   
   const handleDecrement = () => {
     if (quantity > 1) {
-      onUpdateQuantity(service.id, quantity - 1);
+      onUpdateQuantity(service.id, quantity - 1, variant?.id);
     }
   };
   
@@ -46,6 +46,9 @@ const CartItem = ({ item, onRemove, onUpdateQuantity }: CartItemProps) => {
         >
           {service.title}
         </Link>
+        {variant && (
+          <p className="text-sm font-medium text-muted-foreground">{variant.title}</p>
+        )}
         <p className="text-sm text-muted-foreground">{service.deliveryTime}</p>
       </div>
       
@@ -71,14 +74,14 @@ const CartItem = ({ item, onRemove, onUpdateQuantity }: CartItemProps) => {
       </div>
       
       <div className="text-base md:text-lg font-medium w-24 text-right">
-        {(service.price * quantity).toFixed(2)} €
+        {(variant ? variant.price * quantity : service.price * quantity).toFixed(2)} €
       </div>
       
       <Button 
         variant="ghost" 
         size="icon"
         className="text-muted-foreground hover:text-destructive"
-        onClick={() => onRemove(service.id)}
+        onClick={() => onRemove(service.id, variant?.id)}
       >
         <Trash2 size={18} />
       </Button>
