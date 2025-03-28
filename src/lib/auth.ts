@@ -1,4 +1,6 @@
 
+import React, { useState, useEffect } from "react"; 
+
 // Types pour l'authentification
 export interface UserAuth {
   id: string;
@@ -121,10 +123,10 @@ export const isAdmin = async (): Promise<boolean> => {
 
 // Hook personnalisé pour l'authentification
 export const useAuth = () => {
-  const [user, setUser] = React.useState<UserAuth | null>(null);
-  const [loading, setLoading] = React.useState<boolean>(true);
+  const [user, setUser] = useState<UserAuth | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   
-  React.useEffect(() => {
+  useEffect(() => {
     const fetchUser = async () => {
       try {
         const userData = await getCurrentUser();

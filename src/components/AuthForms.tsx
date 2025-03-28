@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 
+// Define form schemas
 const loginSchema = z.object({
   email: z.string().email({ message: "Email invalide" }),
   password: z.string().min(6, { message: "Le mot de passe doit contenir au moins 6 caractères" }),
@@ -50,7 +51,11 @@ export const LoginForm: React.FC = () => {
   const onSubmit = async (data: LoginFormValues) => {
     setIsLoading(true);
     try {
-      await loginUser(data);
+      // Ensure we have non-optional values before calling loginUser
+      await loginUser({
+        email: data.email,
+        password: data.password
+      });
       toast({
         title: "Connexion réussie",
         description: "Vous êtes maintenant connecté.",
@@ -145,7 +150,12 @@ export const RegisterForm: React.FC = () => {
   const onSubmit = async (data: RegisterFormValues) => {
     setIsLoading(true);
     try {
-      await registerUser(data);
+      // Ensure we have non-optional values before calling registerUser
+      await registerUser({
+        name: data.name,
+        email: data.email,
+        password: data.password
+      });
       toast({
         title: "Inscription réussie",
         description: "Votre compte a été créé avec succès.",
