@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -23,6 +22,7 @@ import {
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
 } from "@/components/ui/navigation-menu";
+import { addToCart, CartItemWithLink } from "@/lib/cart";
 
 interface ServiceCardProps {
   service: Service;
@@ -40,6 +40,18 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
   );
   
   const handleAddToCart = () => {
+    const currentPrice = selectedVariant ? selectedVariant.price : service.price;
+    
+    const cartItem: CartItemWithLink = {
+      service: service,
+      variant: selectedVariant,
+      quantity: 1,
+      total: currentPrice,
+      socialMediaLink: ""
+    };
+    
+    addToCart(cartItem);
+    
     const variantInfo = selectedVariant ? ` (${selectedVariant.title})` : '';
     toast({
       title: "Service ajouté au panier",
@@ -47,13 +59,10 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
     });
   };
   
-  // Animation delay based on index for staggered entry
   const delay = index * 0.1;
   
-  // Get current price to display
   const currentPrice = selectedVariant ? selectedVariant.price : service.price;
   
-  // Check if service has variants
   const hasVariants = service.variants && service.variants.length > 0;
   
   return (

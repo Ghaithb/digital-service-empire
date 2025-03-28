@@ -1,4 +1,3 @@
-
 import { Service, ServiceVariant } from "./data";
 
 export interface CartItemWithLink {
@@ -28,6 +27,8 @@ export const updateCart = (cart: CartItemWithLink[]): void => {
 export const addToCart = (item: CartItemWithLink): void => {
   const cart = getCart();
   
+  console.log("Ajout au panier:", item); // Debug
+  
   // Vérifier si l'article existe déjà (même service et même variante)
   const existingItemIndex = cart.findIndex(
     cartItem => 
@@ -51,6 +52,7 @@ export const addToCart = (item: CartItemWithLink): void => {
     cart.push(item);
   }
   
+  console.log("Panier mis à jour:", cart); // Debug
   updateCart(cart);
 };
 
