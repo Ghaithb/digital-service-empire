@@ -22,6 +22,11 @@ import Contact from "../pages/Contact";
 import OrderTracking from "../pages/OrderTracking";
 import Loyalty from "../pages/Loyalty";
 
+// Authentication and user pages
+import Login from "../pages/Login";
+import UserDashboard from "../pages/UserDashboard";
+import AuthCallback from "../pages/AuthCallback";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -46,7 +51,15 @@ const App = () => (
             <Route path="/loyalty" element={<Loyalty />} />
             <Route path="/legal" element={<Legal />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
+            
+            {/* Authentication and user routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/account" element={<UserDashboard />} />
+            <Route path="/auth-callback" element={<AuthCallback />} />
+            
+            {/* Admin dashboard */}
             <Route path="/dashboard" element={<Dashboard />} />
+            
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AnimatePresence>
