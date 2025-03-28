@@ -117,8 +117,37 @@ export const getCurrentUser = async (): Promise<UserAuth | null> => {
 
 // Fonction pour vérifier si l'utilisateur est un administrateur
 export const isAdmin = async (): Promise<boolean> => {
-  const user = await getCurrentUser();
-  return user?.role === 'admin';
+  try {
+    const user = await getCurrentUser();
+    
+    if (!user) {
+      return false;
+    }
+    
+    // Vérification stricte du rôle admin
+    return user.role === 'admin';
+  } catch (error) {
+    console.error('Erreur lors de la vérification des droits admin:', error);
+    return false;
+  }
+};
+
+// Fonction de protection de routes pour les admins
+export const requireAdmin = async (navigate: (path: string) => void): Promise<boolean> => {
+  try {
+    const adminStatus = await isAdmin();
+    
+    if (!adminStatus) {
+      navigate('/');
+      return false;
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Erreur lors de la vérification des permissions:', error);
+    navigate('/');
+    return false;
+  }
 };
 
 // Hook personnalisé pour l'authentification
@@ -141,7 +170,7 @@ export const useAuth = () => {
     fetchUser();
   }, []);
   
-  return { user, loading, isAuthenticated: !!user };
+  return { user, loading, isAuthenticated: !!user, isAdmin: user?.role === 'admin' };
 };
 
 // Fonction pour traiter le callback de l'authentification par OAuth

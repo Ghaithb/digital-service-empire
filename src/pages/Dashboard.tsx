@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -8,6 +7,7 @@ import DashboardOrderTable from "@/components/DashboardOrderTable";
 import DashboardLogin from "@/components/DashboardLogin";
 import { Order, getAllOrders, updateOrderPaymentStatus } from "@/lib/orders";
 import { useToast } from "@/hooks/use-toast";
+import { getCurrentUser, isAdmin, isAuthenticated } from "@/lib/auth";
 import {
   Card,
   CardContent,
@@ -26,6 +26,7 @@ import {
 
 const Dashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isAdminUser, setIsAdminUser] = useState<boolean>(false);
   const [orders, setOrders] = useState<Order[]>([]);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [refreshTrigger, setRefreshTrigger] = useState<number>(0);
@@ -33,42 +34,99 @@ const Dashboard = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Check if admin is logged in
-    const adminToken = localStorage.getItem("adminToken");
-    if (adminToken) {
-      setIsAuthenticated(true);
-    }
+    const checkAuth = async () => {
+      // Vérifier si l'utilisateur est connecté
+      const authenticated = isAuthenticated();
+      if (!authenticated) {
+        setIsAuthenticated(false);
+        setIsAdminUser(false);
+        return;
+      }
+      
+      try {
+        // Vérifier si l'utilisateur a le rôle admin
+        const adminStatus = await isAdmin();
+        setIsAuthenticated(true);
+        setIsAdminUser(adminStatus);
+        
+        if (adminStatus) {
+          // Charger les commandes seulement si l'utilisateur est admin
+          setIsLoading(true);
+          const fetchedOrders = getAllOrders();
+          setOrders(fetchedOrders);
+          setIsLoading(false);
+        } else {
+          // Rediriger les utilisateurs non-admin
+          toast({
+            title: "Accès refusé",
+            description: "Vous n'avez pas les permissions nécessaires pour accéder au tableau de bord administrateur.",
+            variant: "destructive"
+          });
+          navigate("/");
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification des permissions:", error);
+        setIsAuthenticated(false);
+        setIsAdminUser(false);
+      }
+    };
     
-    if (isAuthenticated) {
-      setIsLoading(true);
-      // Fetch all orders
-      const fetchedOrders = getAllOrders();
-      setOrders(fetchedOrders);
-      setIsLoading(false);
-    }
-  }, [isAuthenticated, refreshTrigger]);
+    checkAuth();
+  }, [navigate, refreshTrigger]);
 
-  const handleLogin = (password: string) => {
-    // Simple admin authentication
-    if (password === "admin123") {
-      localStorage.setItem("adminToken", "admin-token-value");
-      setIsAuthenticated(true);
-      toast({
-        title: "Connexion réussie",
-        description: "Vous êtes maintenant connecté au tableau de bord."
-      });
-    } else {
+  const handleLogin = async (password: string) => {
+    try {
+      // Cette fonction devrait désormais vérifier l'authentification via le système d'auth principal
+      // et non plus stocker un token local séparé
+      const token = localStorage.getItem("authToken");
+      
+      if (!token) {
+        toast({
+          title: "Authentification requise",
+          description: "Veuillez vous connecter avec un compte administrateur.",
+          variant: "destructive"
+        });
+        navigate("/login");
+        return;
+      }
+      
+      // Vérifier si l'utilisateur connecté est admin
+      const adminStatus = await isAdmin();
+      
+      if (adminStatus) {
+        setIsAuthenticated(true);
+        setIsAdminUser(true);
+        toast({
+          title: "Connexion réussie",
+          description: "Vous êtes maintenant connecté au tableau de bord."
+        });
+        
+        // Charger les commandes
+        setIsLoading(true);
+        const fetchedOrders = getAllOrders();
+        setOrders(fetchedOrders);
+        setIsLoading(false);
+      } else {
+        toast({
+          title: "Accès refusé",
+          description: "Vous n'avez pas les permissions nécessaires pour accéder au tableau de bord administrateur.",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error("Erreur d'authentification:", error);
       toast({
         title: "Erreur de connexion",
-        description: "Mot de passe incorrect.",
+        description: "Une erreur est survenue lors de la vérification de vos droits d'accès.",
         variant: "destructive"
       });
     }
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("adminToken");
+    // Déconnecter juste du dashboard admin, pas du compte utilisateur complet
     setIsAuthenticated(false);
+    setIsAdminUser(false);
     navigate("/dashboard");
     toast({
       title: "Déconnexion",
@@ -119,8 +177,16 @@ const Dashboard = () => {
             Tableau de Bord Admin
           </h1>
           
-          {!isAuthenticated ? (
-            <DashboardLogin onLogin={handleLogin} />
+          {!isAuthenticated || !isAdminUser ? (
+            <div className="text-center">
+              <p className="mb-6">Veuillez vous connecter avec un compte administrateur pour accéder au tableau de bord.</p>
+              <button 
+                onClick={() => navigate("/login")}
+                className="px-4 py-2 bg-primary text-primary-foreground hover:bg-primary/90 rounded-md"
+              >
+                Se connecter
+              </button>
+            </div>
           ) : (
             <>
               <div className="flex justify-between items-center mb-6">
