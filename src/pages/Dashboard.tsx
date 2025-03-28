@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -7,7 +8,7 @@ import DashboardOrderTable from "@/components/DashboardOrderTable";
 import DashboardLogin from "@/components/DashboardLogin";
 import { Order, getAllOrders, updateOrderPaymentStatus } from "@/lib/orders";
 import { useToast } from "@/hooks/use-toast";
-import { getCurrentUser, isAdmin, isAuthenticated } from "@/lib/auth";
+import { getCurrentUser, isAdmin, isAuthenticated as checkIsAuthenticated } from "@/lib/auth";
 import {
   Card,
   CardContent,
@@ -36,7 +37,7 @@ const Dashboard = () => {
   useEffect(() => {
     const checkAuth = async () => {
       // Vérifier si l'utilisateur est connecté
-      const authenticated = isAuthenticated();
+      const authenticated = checkIsAuthenticated();
       if (!authenticated) {
         setIsAuthenticated(false);
         setIsAdminUser(false);
