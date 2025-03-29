@@ -3,7 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import { CartItemWithLink } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
-import { Trash2, Plus, Minus } from "lucide-react";
+import { Trash2, Plus, Minus, LinkIcon } from "lucide-react";
 
 interface CartItemProps {
   item: CartItemWithLink;
@@ -12,7 +12,7 @@ interface CartItemProps {
 }
 
 const CartItem = ({ item, onRemove, onUpdateQuantity }: CartItemProps) => {
-  const { service, variant, quantity } = item;
+  const { service, variant, quantity, socialMediaLink } = item;
   const [imageLoaded, setImageLoaded] = useState(false);
   
   const handleIncrement = () => {
@@ -50,6 +50,13 @@ const CartItem = ({ item, onRemove, onUpdateQuantity }: CartItemProps) => {
           <p className="text-sm font-medium text-muted-foreground">{variant.title}</p>
         )}
         <p className="text-sm text-muted-foreground">{service.deliveryTime}</p>
+        
+        {socialMediaLink && (
+          <div className="flex items-center mt-1 text-sm text-muted-foreground">
+            <LinkIcon size={14} className="mr-1" />
+            <span className="truncate max-w-[200px]">{socialMediaLink}</span>
+          </div>
+        )}
       </div>
       
       <div className="flex items-center space-x-3">

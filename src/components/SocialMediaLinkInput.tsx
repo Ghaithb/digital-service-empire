@@ -10,9 +10,22 @@ interface SocialMediaLinkInputProps {
   onChange: (value: string) => void;
   serviceType?: string;
   form?: any;
+  index?: number;
 }
 
-const SocialMediaLinkInput = ({ value, onChange, serviceType, form }: SocialMediaLinkInputProps) => {
+const SocialMediaLinkInput = ({ value, onChange, serviceType, form, index }: SocialMediaLinkInputProps) => {
+  const getPlaceholderText = () => {
+    const action = serviceType === 'followers' ? 'obtenir des abonnés' : 
+            serviceType === 'likes' ? 'obtenir des likes' : 
+            serviceType === 'views' ? 'obtenir des vues' : 
+            'appliquer le service';
+    
+    if (index !== undefined) {
+      return `Entrez le lien du compte ${index + 1} où vous souhaitez ${action}`;
+    }
+    return `Entrez le lien où vous souhaitez ${action}`;
+  };
+
   if (form) {
     return (
       <FormField
@@ -26,10 +39,7 @@ const SocialMediaLinkInput = ({ value, onChange, serviceType, form }: SocialMedi
                 <Link className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input
                   className="pl-10"
-                  placeholder={`Entrez le lien où vous souhaitez ${serviceType === 'followers' ? 'obtenir des abonnés' : 
-                    serviceType === 'likes' ? 'obtenir des likes' : 
-                    serviceType === 'views' ? 'obtenir des vues' : 
-                    'appliquer le service'}`}
+                  placeholder={getPlaceholderText()}
                   {...field}
                 />
               </div>
@@ -46,18 +56,15 @@ const SocialMediaLinkInput = ({ value, onChange, serviceType, form }: SocialMedi
 
   return (
     <div className="mb-4">
-      <Label htmlFor="socialMediaLink" className="block mb-2">
-        Lien du profil/post {serviceType || "social"}
+      <Label htmlFor={`socialMediaLink${index || ''}`} className="block mb-2">
+        Lien du profil/post {serviceType || "social"} {index !== undefined ? `#${index + 1}` : ''}
       </Label>
       <div className="relative">
         <Link className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
         <Input
-          id="socialMediaLink"
+          id={`socialMediaLink${index || ''}`}
           className="pl-10"
-          placeholder={`Entrez le lien où vous souhaitez ${serviceType === 'followers' ? 'obtenir des abonnés' : 
-            serviceType === 'likes' ? 'obtenir des likes' : 
-            serviceType === 'views' ? 'obtenir des vues' : 
-            'appliquer le service'}`}
+          placeholder={getPlaceholderText()}
           value={value}
           onChange={(e) => onChange(e.target.value)}
         />

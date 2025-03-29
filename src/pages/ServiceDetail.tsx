@@ -16,9 +16,11 @@ import {
   Shield, 
   ThumbsUp, 
   Award,
-  Share 
+  Share,
+  PlusSquare
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { addToCart } from "@/lib/cart";
 
 const ServiceDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -26,8 +28,7 @@ const ServiceDetail = () => {
   const [imageLoaded, setImageLoaded] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(null);
-  const [socialMediaLink, setSocialMediaLink] = useState("");
-  const [totalPrice, setTotalPrice] = useState(0);
+  const [socialMediaLinks, setSocialMediaLinks] = useState<string[]>(['']);
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -41,9 +42,6 @@ const ServiceDetail = () => {
           const popularVariant = serviceData.variants.find(v => v.popular);
           const variant = popularVariant || serviceData.variants[0];
           setSelectedVariant(variant);
-          setTotalPrice(variant.price);
-        } else {
-          setTotalPrice(serviceData.price);
         }
       } else {
         navigate("/services");
@@ -53,57 +51,62 @@ const ServiceDetail = () => {
     window.scrollTo(0, 0);
   }, [id, navigate]);
   
-  useEffect(() => {
-    // Mettre à jour le prix total lorsque la quantité ou la variante change
-    if (selectedVariant) {
-      setTotalPrice(selectedVariant.price * quantity);
-    } else if (service) {
-      setTotalPrice(service.price * quantity);
-    }
-  }, [quantity, selectedVariant, service]);
+  const handleAddSocialMediaLink = () => {
+    setSocialMediaLinks([...socialMediaLinks, '']);
+  };
+  
+  const handleRemoveSocialMediaLink = (index: number) => {
+    const newLinks = [...socialMediaLinks];
+    newLinks.splice(index, 1);
+    setSocialMediaLinks(newLinks);
+  };
+  
+  const handleUpdateSocialMediaLink = (index: number, value: string) => {
+    const newLinks = [...socialMediaLinks];
+    newLinks[index] = value;
+    setSocialMediaLinks(newLinks);
+  };
   
   const handleAddToCart = () => {
     if (!service) return;
     
-    if (!socialMediaLink) {
+    // Vérifier si tous les liens sont remplis
+    const emptyLinks = socialMediaLinks.filter(link => !link.trim());
+    if (emptyLinks.length > 0) {
       toast({
         title: "Information manquante",
-        description: "Veuillez entrer le lien de votre profil ou publication.",
+        description: "Veuillez entrer tous les liens des profils ou publications.",
         variant: "destructive",
       });
       return;
     }
     
+    // Ajouter chaque lien comme un article séparé
+    socialMediaLinks.forEach(link => {
+      const price = selectedVariant ? selectedVariant.price : service.price;
+      const total = price * quantity;
+      
+      const cartItem = {
+        service: service,
+        variant: selectedVariant,
+        quantity: quantity,
+        total: total,
+        socialMediaLink: link,
+      };
+      
+      addToCart(cartItem);
+    });
+    
     const variantInfo = selectedVariant ? ` (${selectedVariant.title})` : '';
-    
-    // Créer un objet représentant l'article à ajouter au panier
-    const cartItem = {
-      service: service,
-      variant: selectedVariant,
-      quantity: quantity,
-      price: totalPrice,
-      socialMediaLink: socialMediaLink,
-    };
-    
-    // Stocker dans localStorage (version simple pour la démonstration)
-    const existingCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    existingCart.push(cartItem);
-    localStorage.setItem("cart", JSON.stringify(existingCart));
+    const linkCount = socialMediaLinks.length;
     
     toast({
       title: "Service ajouté au panier",
-      description: `${quantity} × ${service.title}${variantInfo} a été ajouté à votre panier.`,
+      description: `${quantity} × ${service.title}${variantInfo} pour ${linkCount} compte${linkCount > 1 ? 's' : ''} a été ajouté à votre panier.`,
     });
     
     // Rediriger vers le panier
     navigate("/cart");
-  };
-  
-  const getPrice = () => {
-    if (selectedVariant) {
-      return selectedVariant.price;
-    }
-    return service?.price || 0;
   };
   
   const serviceType = selectedVariant?.type || service?.category;
@@ -187,7 +190,9 @@ const ServiceDetail = () => {
               <h1 className="text-3xl md:text-4xl font-bold mb-4">{service.title}</h1>
               
               <div className="flex items-center mb-4">
-                <p className="text-xl font-bold">{totalPrice.toFixed(2)} €</p>
+                <p className="text-xl font-bold">
+                  {((selectedVariant ? selectedVariant.price : service.price) * quantity).toFixed(2)} €
+                </p>
                 {quantity > 1 && selectedVariant && (
                   <span className="text-sm text-muted-foreground ml-2">
                     ({selectedVariant.price.toFixed(2)} € par unité)
@@ -199,12 +204,47 @@ const ServiceDetail = () => {
                 {service.description}
               </p>
               
-              {/* Lien social media */}
-              <SocialMediaLinkInput 
-                value={socialMediaLink}
-                onChange={setSocialMediaLink}
-                serviceType={serviceType}
-              />
+              {/* Section liens sociaux (multiple) */}
+              <div className="mb-6 space-y-4">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-medium">Liens des comptes</h3>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={handleAddSocialMediaLink}
+                    className="flex items-center"
+                  >
+                    <PlusSquare size={16} className="mr-2" />
+                    Ajouter un compte
+                  </Button>
+                </div>
+                
+                {socialMediaLinks.map((link, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <div className="flex-1">
+                      <SocialMediaLinkInput 
+                        value={link}
+                        onChange={(value) => handleUpdateSocialMediaLink(index, value)}
+                        serviceType={serviceType}
+                      />
+                    </div>
+                    {socialMediaLinks.length > 1 && (
+                      <Button 
+                        variant="outline" 
+                        size="icon"
+                        className="mt-4"
+                        onClick={() => handleRemoveSocialMediaLink(index)}
+                      >
+                        <Trash2 size={16} />
+                      </Button>
+                    )}
+                  </div>
+                ))}
+                
+                <div className="text-sm text-muted-foreground">
+                  Vous commandez ce service pour {socialMediaLinks.length} compte{socialMediaLinks.length > 1 ? 's' : ''}.
+                </div>
+              </div>
               
               {/* Variants Selector */}
               {service.variants && service.variants.length > 0 && (
