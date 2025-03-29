@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -44,9 +43,16 @@ const Cart = () => {
     window.scrollTo(0, 0);
   }, []);
   
-  const handleRemoveItem = (id: string, variantId?: string) => {
-    removeFromCart(id, variantId);
-    setCartItems(getCart());
+  const handleRemoveItem = (id: string, variantId?: string, index?: number) => {
+    if (index !== undefined) {
+      const newItems = [...cartItems];
+      newItems.splice(index, 1);
+      updateCart(newItems);
+      setCartItems(newItems);
+    } else {
+      removeFromCart(id, variantId);
+      setCartItems(getCart());
+    }
     
     toast({
       title: "Service retiré",
@@ -54,19 +60,42 @@ const Cart = () => {
     });
   };
   
-  const handleUpdateQuantity = (id: string, quantity: number, variantId?: string) => {
-    updateCartItemQuantity(id, quantity, variantId);
-    setCartItems(getCart());
+  const handleUpdateQuantity = (id: string, quantity: number, variantId?: string, index?: number) => {
+    if (index !== undefined) {
+      const newItems = [...cartItems];
+      if (newItems[index]) {
+        newItems[index].quantity = quantity;
+        newItems[index].total = quantity * (newItems[index].variant?.price || newItems[index].service.price);
+        updateCart(newItems);
+        setCartItems(newItems);
+      }
+    } else {
+      updateCartItemQuantity(id, quantity, variantId);
+      setCartItems(getCart());
+    }
   };
   
-  const handleUpdateSocialLink = (id: string, link: string, variantId?: string) => {
-    updateCartItemSocialLink(id, link, variantId);
-    setCartItems(getCart());
+  const handleUpdateSocialLink = (id: string, link: string, variantId?: string, index?: number) => {
+    if (index !== undefined) {
+      const newItems = [...cartItems];
+      if (newItems[index]) {
+        newItems[index].socialMediaLink = link;
+        updateCart(newItems);
+        setCartItems(newItems);
+      }
+    } else {
+      updateCartItemSocialLink(id, link, variantId);
+      setCartItems(getCart());
+    }
     
     toast({
       title: "Lien mis à jour",
       description: "Le lien du profil/publication a été mis à jour.",
     });
+  };
+  
+  const updateCart = (items: CartItemType[]) => {
+    localStorage.setItem("cart", JSON.stringify(items));
   };
   
   const calculateTotal = () => {
@@ -191,8 +220,9 @@ const Cart = () => {
                 <div className="bg-card p-6 rounded-xl mb-6">
                   {cartItems.map((item, index) => (
                     <CartItemWithLink
-                      key={`${item.service.id}-${item.variant?.id || 'standard'}-${index}`}
+                      key={index}
                       item={item}
+                      itemIndex={index}
                       onRemove={handleRemoveItem}
                       onUpdateQuantity={handleUpdateQuantity}
                       onUpdateSocialLink={handleUpdateSocialLink}

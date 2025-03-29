@@ -8,16 +8,18 @@ import { Trash2, Link as LinkIcon, Edit, ChevronUp, ChevronDown } from "lucide-r
 
 interface CartItemWithLinkProps {
   item: CartItemType;
-  onRemove: (id: string, variantId?: string) => void;
-  onUpdateQuantity: (id: string, quantity: number, variantId?: string) => void;
-  onUpdateSocialLink: (id: string, link: string, variantId?: string) => void;
+  onRemove: (id: string, variantId?: string, index?: number) => void;
+  onUpdateQuantity: (id: string, quantity: number, variantId?: string, index?: number) => void;
+  onUpdateSocialLink: (id: string, link: string, variantId?: string, index?: number) => void;
+  itemIndex: number;
 }
 
 const CartItemWithLink = ({ 
   item, 
   onRemove, 
   onUpdateQuantity,
-  onUpdateSocialLink 
+  onUpdateSocialLink,
+  itemIndex
 }: CartItemWithLinkProps) => {
   const [quantity, setQuantity] = useState(item.quantity);
   const [isEditingLink, setIsEditingLink] = useState(!item.socialMediaLink);
@@ -26,18 +28,18 @@ const CartItemWithLink = ({
   const handleQuantityChange = (newQuantity: number) => {
     if (newQuantity < 1) return;
     setQuantity(newQuantity);
-    onUpdateQuantity(item.service.id, newQuantity, item.variant?.id);
+    onUpdateQuantity(item.service.id, newQuantity, item.variant?.id, itemIndex);
   };
 
   const handleSocialLinkSave = () => {
-    onUpdateSocialLink(item.service.id, socialLink, item.variant?.id);
+    onUpdateSocialLink(item.service.id, socialLink, item.variant?.id, itemIndex);
     setIsEditingLink(false);
   };
 
   return (
-    <div className="py-4 border-b last:border-0">
+    <div className="py-6 border-b last:border-0">
       <div className="flex gap-4">
-        <div className="w-20 h-20 bg-muted rounded overflow-hidden shrink-0">
+        <div className="w-24 h-24 bg-muted rounded-lg overflow-hidden shrink-0">
           <img 
             src={item.service.imageUrl} 
             alt={item.service.title}
@@ -62,7 +64,7 @@ const CartItemWithLink = ({
             <Button 
               variant="ghost" 
               size="icon" 
-              onClick={() => onRemove(item.service.id, item.variant?.id)}
+              onClick={() => onRemove(item.service.id, item.variant?.id, itemIndex)}
               className="h-8 w-8 text-destructive hover:text-destructive"
             >
               <Trash2 size={16} />
@@ -70,12 +72,12 @@ const CartItemWithLink = ({
           </div>
           
           {isEditingLink ? (
-            <div className="flex items-center gap-2 mt-2">
+            <div className="flex items-center gap-2 mt-3">
               <div className="relative flex-1">
                 <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input 
                   className="pl-10 py-1 h-10 text-sm"
-                  placeholder={`Entrez le lien de votre profil`}
+                  placeholder="Entrez le lien de votre profil"
                   value={socialLink}
                   onChange={(e) => setSocialLink(e.target.value)}
                 />
@@ -89,7 +91,7 @@ const CartItemWithLink = ({
               </Button>
             </div>
           ) : (
-            <div className="flex items-center text-sm text-muted-foreground mt-2">
+            <div className="flex items-center text-sm text-muted-foreground mt-3">
               <LinkIcon size={14} className="mr-2" />
               <span className="truncate max-w-[200px] sm:max-w-xs">{socialLink}</span>
               <Button 
@@ -103,10 +105,10 @@ const CartItemWithLink = ({
             </div>
           )}
           
-          <div className="flex justify-between items-center mt-3">
-            <div className="flex items-center">
+          <div className="flex justify-between items-center mt-4">
+            <div className="flex items-center border rounded-md">
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={() => handleQuantityChange(quantity - 1)}
                 disabled={quantity <= 1}
@@ -114,11 +116,11 @@ const CartItemWithLink = ({
               >
                 -
               </Button>
-              <div className="h-9 px-4 flex items-center justify-center border-y">
+              <div className="h-9 px-4 flex items-center justify-center">
                 {quantity}
               </div>
               <Button
-                variant="outline"
+                variant="ghost"
                 size="icon"
                 onClick={() => handleQuantityChange(quantity + 1)}
                 className="h-9 w-9 rounded-l-none"
