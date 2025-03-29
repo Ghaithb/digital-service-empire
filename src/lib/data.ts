@@ -1223,3 +1223,7 @@ export const getServiceVariantById = (serviceId: string, variantId: string): Ser
 export const getServiceTypeInfo = (type: ServiceType) => {
   return serviceTypes.find(t => t.id === type);
 };
+
+export const getAllServices = (): Service[] => {
+  return services;
+};
