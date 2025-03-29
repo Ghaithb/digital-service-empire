@@ -21,6 +21,7 @@ import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
 import OrderTracking from "./pages/OrderTracking";
 import Loyalty from "./pages/Loyalty";
+import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient();
 
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/loyalty" element={<Loyalty />} />
             <Route path="/legal" element={<Legal />} />
+            <Route path="/faq" element={<FAQ />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="*" element={<NotFound />} />

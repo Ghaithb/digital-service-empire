@@ -7,6 +7,7 @@ import { socialPlatforms, serviceCategories } from "@/lib/data";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { getCart } from "@/lib/cart";
+import SearchBar from "@/components/SearchBar";
 import {
   NavigationMenu,
   NavigationMenuContent,
@@ -241,8 +242,10 @@ const Navbar = () => {
           ))}
         </div>
         
-        {/* Cart and Mobile Menu Buttons */}
+        {/* Cart, Search and Mobile Menu Buttons */}
         <div className="flex items-center space-x-3">
+          <SearchBar />
+          
           <Link to="/cart">
             <Button variant="ghost" size="icon" className="relative">
               <ShoppingCart size={20} />
