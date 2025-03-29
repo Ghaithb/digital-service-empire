@@ -4,8 +4,7 @@ import { Link } from "react-router-dom";
 import { CartItemWithLink as CartItemType } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Link as LinkIcon, Edit } from "lucide-react";
-import SocialMediaLinkInput from "@/components/SocialMediaLinkInput";
+import { Trash2, Link as LinkIcon, Edit, ChevronUp, ChevronDown } from "lucide-react";
 
 interface CartItemWithLinkProps {
   item: CartItemType;
@@ -37,8 +36,8 @@ const CartItemWithLink = ({
 
   return (
     <div className="py-4 border-b last:border-0">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="w-full sm:w-20 h-20 bg-muted rounded overflow-hidden shrink-0">
+      <div className="flex gap-4">
+        <div className="w-20 h-20 bg-muted rounded overflow-hidden shrink-0">
           <img 
             src={item.service.imageUrl} 
             alt={item.service.title}
@@ -46,11 +45,19 @@ const CartItemWithLink = ({
           />
         </div>
         
-        <div className="flex-1 space-y-2">
+        <div className="flex-1">
           <div className="flex justify-between">
-            <Link to={`/service/${item.service.id}`} className="font-medium hover:text-primary">
-              {item.service.title}
-            </Link>
+            <div>
+              <Link to={`/service/${item.service.id}`} className="font-medium hover:text-primary text-lg">
+                {item.service.title}
+              </Link>
+              
+              {item.variant && (
+                <p className="text-sm text-muted-foreground">
+                  Option: {item.variant.title}
+                </p>
+              )}
+            </div>
             
             <Button 
               variant="ghost" 
@@ -62,35 +69,28 @@ const CartItemWithLink = ({
             </Button>
           </div>
           
-          {item.variant && (
-            <p className="text-sm text-muted-foreground">
-              Option: {item.variant.title}
-            </p>
-          )}
-          
           {isEditingLink ? (
             <div className="flex items-center gap-2 mt-2">
               <div className="relative flex-1">
-                <LinkIcon className="absolute left-2 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
                 <Input 
-                  className="pl-8 py-1 h-8 text-sm"
-                  placeholder={`Entrez le lien ${item.service.category === 'followers' ? 'de votre profil' : 'de votre publication'}`}
+                  className="pl-10 py-1 h-10 text-sm"
+                  placeholder={`Entrez le lien de votre profil`}
                   value={socialLink}
                   onChange={(e) => setSocialLink(e.target.value)}
                 />
               </div>
               <Button 
-                variant="outline" 
-                size="sm" 
-                className="h-8"
+                size="sm"
+                className="h-10"
                 onClick={handleSocialLinkSave}
               >
                 Enregistrer
               </Button>
             </div>
           ) : (
-            <div className="flex items-center text-sm text-muted-foreground mt-1">
-              <LinkIcon size={14} className="mr-1" />
+            <div className="flex items-center text-sm text-muted-foreground mt-2">
+              <LinkIcon size={14} className="mr-2" />
               <span className="truncate max-w-[200px] sm:max-w-xs">{socialLink}</span>
               <Button 
                 variant="ghost" 
@@ -103,29 +103,31 @@ const CartItemWithLink = ({
             </div>
           )}
           
-          <div className="flex justify-between items-center mt-2">
-            <div className="flex items-center space-x-2">
+          <div className="flex justify-between items-center mt-3">
+            <div className="flex items-center">
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => handleQuantityChange(quantity - 1)}
                 disabled={quantity <= 1}
-                className="h-7 w-7"
+                className="h-9 w-9 rounded-r-none"
               >
                 -
               </Button>
-              <span className="w-8 text-center">{quantity}</span>
+              <div className="h-9 px-4 flex items-center justify-center border-y">
+                {quantity}
+              </div>
               <Button
                 variant="outline"
                 size="icon"
                 onClick={() => handleQuantityChange(quantity + 1)}
-                className="h-7 w-7"
+                className="h-9 w-9 rounded-l-none"
               >
                 +
               </Button>
             </div>
             
-            <div className="font-medium">
+            <div className="font-semibold text-lg">
               {item.total.toFixed(2)} €
             </div>
           </div>

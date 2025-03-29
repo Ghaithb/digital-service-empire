@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -18,7 +19,8 @@ import {
   Wallet, 
   Clock,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  Info
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import * as z from "zod";
@@ -249,16 +251,16 @@ const Cart = () => {
                     </div>
                     <div className="border-t pt-3 flex justify-between font-medium">
                       <span>Total</span>
-                      <span className="text-lg">{calculateTotal().toFixed(2)} €</span>
+                      <span className="text-lg font-bold">{calculateTotal().toFixed(2)} €</span>
                     </div>
                   </div>
                   
                   {!showCheckoutForm ? (
                     <Button 
-                      className="w-full mb-4"
+                      className="w-full mb-4 py-6 text-lg"
                       onClick={handleProceedToCheckout}
                     >
-                      Passer à la caisse <ChevronRight size={16} className="ml-2" />
+                      Passer à la caisse <ChevronRight size={20} className="ml-2" />
                     </Button>
                   ) : !showPaymentForm ? (
                     <Button 
@@ -280,29 +282,32 @@ const Cart = () => {
                   )}
                   
                   <div className="flex flex-col space-y-3 mb-6">
-                    <div className="text-sm text-muted-foreground text-center mb-2">
+                    <div className="text-sm text-center mb-2 font-medium">
                       Méthodes de paiement acceptées
                     </div>
-                    <div className="flex justify-center space-x-3">
-                      <CreditCard className="text-muted-foreground" />
-                      <Wallet className="text-muted-foreground" />
+                    <div className="flex justify-center space-x-6 py-2">
+                      <CreditCard className="text-muted-foreground h-6 w-6" />
+                      <Wallet className="text-muted-foreground h-6 w-6" />
                     </div>
                   </div>
                   
-                  <div className="text-xs text-muted-foreground">
-                    <p className="flex items-center mb-2">
-                      <Clock size={14} className="mr-2" />
+                  <div className="text-sm text-muted-foreground border-t pt-4">
+                    <p className="flex items-center mb-3">
+                      <Clock size={16} className="mr-2 text-primary" />
                       Livraison rapide sous 24h à 72h
                     </p>
-                    <p>
-                      En passant votre commande, vous acceptez nos{" "}
-                      <Link to="/legal" className="text-primary hover:underline">
-                        conditions générales de vente
-                      </Link>{" "}
-                      et notre{" "}
-                      <Link to="/legal" className="text-primary hover:underline">
-                        politique de confidentialité
-                      </Link>.
+                    <p className="flex items-start">
+                      <Info size={16} className="mr-2 mt-1 shrink-0 text-primary" />
+                      <span>
+                        En passant votre commande, vous acceptez nos{" "}
+                        <Link to="/legal" className="text-primary hover:underline">
+                          conditions générales de vente
+                        </Link>{" "}
+                        et notre{" "}
+                        <Link to="/legal" className="text-primary hover:underline">
+                          politique de confidentialité
+                        </Link>.
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -315,7 +320,7 @@ const Cart = () => {
               <p className="text-muted-foreground mb-8">
                 Parcourez notre catalogue pour découvrir des services qui boosteront votre présence en ligne.
               </p>
-              <Button asChild>
+              <Button asChild size="lg" className="px-8 py-6 text-lg">
                 <Link to="/services">
                   Découvrir nos services
                 </Link>
@@ -336,15 +341,6 @@ const formSchema = z.object({
   }),
   email: z.string().email({
     message: "Veuillez entrer une adresse email valide.",
-  }),
-  cardNumber: z.string().regex(/^\d{16}$/, {
-    message: "Le numéro de carte doit contenir 16 chiffres.",
-  }),
-  expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, {
-    message: "Format: MM/YY",
-  }),
-  cvv: z.string().regex(/^\d{3,4}$/, {
-    message: "Le CVV doit contenir 3 ou 4 chiffres.",
   }),
 });
 
