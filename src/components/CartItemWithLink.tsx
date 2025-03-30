@@ -4,7 +4,8 @@ import { Link } from "react-router-dom";
 import { CartItemWithLink as CartItemType } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Link as LinkIcon, Edit } from "lucide-react";
+import { Trash2, Link as LinkIcon } from "lucide-react";
+import SocialMediaLinkInput from "./SocialMediaLinkInput";
 
 interface CartItemWithLinkProps {
   item: CartItemType;
@@ -22,7 +23,6 @@ const CartItemWithLink = ({
   itemIndex
 }: CartItemWithLinkProps) => {
   const [quantity, setQuantity] = useState(item.quantity);
-  const [isEditingLink, setIsEditingLink] = useState(!item.socialMediaLink);
   const [socialLink, setSocialLink] = useState(item.socialMediaLink || "");
 
   const handleQuantityChange = (newQuantity: number) => {
@@ -31,9 +31,9 @@ const CartItemWithLink = ({
     onUpdateQuantity(item.service.id, newQuantity, item.variant?.id, itemIndex);
   };
 
-  const handleSocialLinkSave = () => {
-    onUpdateSocialLink(item.service.id, socialLink, item.variant?.id, itemIndex);
-    setIsEditingLink(false);
+  const handleSocialLinkChange = (newLink: string) => {
+    setSocialLink(newLink);
+    onUpdateSocialLink(item.service.id, newLink, item.variant?.id, itemIndex);
   };
 
   return (
@@ -75,39 +75,14 @@ const CartItemWithLink = ({
             </Button>
           </div>
           
-          {isEditingLink ? (
-            <div className="flex items-center gap-2 mt-3">
-              <div className="relative flex-1">
-                <LinkIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input 
-                  className="pl-10 py-1 h-10 text-sm"
-                  placeholder="Entrez le lien de votre profil"
-                  value={socialLink}
-                  onChange={(e) => setSocialLink(e.target.value)}
-                />
-              </div>
-              <Button 
-                size="sm"
-                className="h-10"
-                onClick={handleSocialLinkSave}
-              >
-                Enregistrer
-              </Button>
-            </div>
-          ) : (
-            <div className="flex items-center text-sm text-muted-foreground mt-3">
-              <LinkIcon size={14} className="mr-2" />
-              <span className="truncate max-w-[200px] sm:max-w-xs">{socialLink}</span>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                onClick={() => setIsEditingLink(true)}
-                className="h-6 w-6 ml-1"
-              >
-                <Edit size={12} />
-              </Button>
-            </div>
-          )}
+          <div className="mt-4">
+            <SocialMediaLinkInput
+              value={socialLink}
+              onChange={handleSocialLinkChange}
+              serviceType={item.service.category}
+              index={itemIndex}
+            />
+          </div>
           
           <div className="flex justify-between items-center mt-4">
             <div className="flex items-center border rounded-md">
