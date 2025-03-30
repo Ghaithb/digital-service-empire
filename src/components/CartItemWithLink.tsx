@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import { CartItemWithLink as CartItemType } from "@/lib/cart";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Trash2, Link as LinkIcon, Edit, ChevronUp, ChevronDown } from "lucide-react";
+import { Trash2, Link as LinkIcon, Edit } from "lucide-react";
 
 interface CartItemWithLinkProps {
   item: CartItemType;
@@ -59,6 +59,10 @@ const CartItemWithLink = ({
                   Option: {item.variant.title}
                 </p>
               )}
+              
+              <p className="text-sm text-muted-foreground mt-1">
+                Item #{itemIndex + 1}
+              </p>
             </div>
             
             <Button 

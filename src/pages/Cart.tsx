@@ -174,12 +174,12 @@ const Cart = () => {
   const getPaymentData = (): PaymentData => {
     return {
       amount: calculateTotal(),
-      items: cartItems.map(item => ({
+      items: cartItems.map((item, index) => ({
         id: item.service.id,
-        name: item.service.title + (item.variant ? ` (${item.variant.title})` : ''),
+        name: `${item.service.title}${item.variant ? ` (${item.variant.title})` : ''} #${index + 1}`,
         quantity: item.quantity,
         price: item.variant?.price || item.service.price,
-        socialMediaLink: item.socialMediaLink
+        socialMediaLink: item.socialMediaLink || ''
       })),
       email: customerInfo?.email || '',
       fullName: customerInfo?.fullName || '',
@@ -220,7 +220,7 @@ const Cart = () => {
                 <div className="bg-card p-6 rounded-xl mb-6">
                   {cartItems.map((item, index) => (
                     <CartItemWithLink
-                      key={index}
+                      key={`${item.service.id}-${item.variant?.id || 'default'}-${index}`}
                       item={item}
                       itemIndex={index}
                       onRemove={handleRemoveItem}
