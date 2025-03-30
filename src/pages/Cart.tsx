@@ -1,28 +1,27 @@
+
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import CartItemWithLink from "@/components/CartItemWithLink";
-import CheckoutForm from "@/components/CheckoutForm";
-import StripeWrapper from "@/components/StripeWrapper";
-import StripePaymentForm from "@/components/StripePaymentForm";
+import CartItemsList from "@/components/CartItemsList";
+import CartSummary from "@/components/CartSummary";
+import CartCheckoutSection from "@/components/CartCheckoutSection";
+import EmptyCart from "@/components/EmptyCart";
 import { CartItemWithLink as CartItemType, getCart, removeFromCart, updateCartItemQuantity, updateCartItemSocialLink, clearCart } from "@/lib/cart";
 import { PaymentData } from "@/lib/stripe";
 import { createOrder, updateOrderPaymentStatus } from "@/lib/orders";
-import { Button } from "@/components/ui/button";
-import { 
-  ShoppingCart, 
-  ChevronRight, 
-  CreditCard, 
-  Wallet, 
-  Clock,
-  ChevronDown,
-  ChevronUp,
-  Info
-} from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import * as z from "zod";
+
+const formSchema = z.object({
+  fullName: z.string().min(3, {
+    message: "Le nom complet doit contenir au moins 3 caractères.",
+  }),
+  email: z.string().email({
+    message: "Veuillez entrer une adresse email valide.",
+  }),
+});
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
@@ -217,145 +216,39 @@ const Cart = () => {
           {cartItems.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
               <div className="lg:col-span-2">
-                <div className="bg-card p-6 rounded-xl mb-6">
-                  {cartItems.map((item, index) => (
-                    <CartItemWithLink
-                      key={`${item.service.id}-${item.variant?.id || 'default'}-${index}`}
-                      item={item}
-                      itemIndex={index}
-                      onRemove={handleRemoveItem}
-                      onUpdateQuantity={handleUpdateQuantity}
-                      onUpdateSocialLink={handleUpdateSocialLink}
-                    />
-                  ))}
-                </div>
+                <CartItemsList 
+                  cartItems={cartItems}
+                  handleRemoveItem={handleRemoveItem}
+                  handleUpdateQuantity={handleUpdateQuantity}
+                  handleUpdateSocialLink={handleUpdateSocialLink}
+                />
                 
-                {showCheckoutForm && !showPaymentForm && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    transition={{ duration: 0.5 }}
-                    className="bg-card p-6 rounded-xl"
-                  >
-                    <h2 className="text-xl font-medium mb-6">Informations de livraison</h2>
-                    <CheckoutForm 
-                      onSubmit={handlePaymentSubmit}
-                      isProcessing={isProcessingPayment}
-                    />
-                  </motion.div>
-                )}
-                
-                {showPaymentForm && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    transition={{ duration: 0.5 }}
-                    className="bg-card p-6 rounded-xl"
-                  >
-                    <h2 className="text-xl font-medium mb-6">Paiement</h2>
-                    <StripeWrapper>
-                      <StripePaymentForm 
-                        paymentData={getPaymentData()}
-                        onSuccess={handlePaymentSuccess}
-                        onError={handlePaymentError}
-                      />
-                    </StripeWrapper>
-                  </motion.div>
-                )}
+                <CartCheckoutSection 
+                  showCheckoutForm={showCheckoutForm}
+                  showPaymentForm={showPaymentForm}
+                  handlePaymentSubmit={handlePaymentSubmit}
+                  isProcessingPayment={isProcessingPayment}
+                  getPaymentData={getPaymentData}
+                  handlePaymentSuccess={handlePaymentSuccess}
+                  handlePaymentError={handlePaymentError}
+                />
               </div>
               
               <div className="lg:col-span-1">
-                <div className="bg-card p-6 rounded-xl sticky top-24">
-                  <h2 className="text-xl font-medium mb-4">Résumé de la commande</h2>
-                  
-                  <div className="space-y-3 mb-6">
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        Sous-total ({cartItems.length} article{cartItems.length > 1 ? 's' : ''})
-                      </span>
-                      <span>{calculateTotal().toFixed(2)} €</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">TVA</span>
-                      <span>0.00 €</span>
-                    </div>
-                    <div className="border-t pt-3 flex justify-between font-medium">
-                      <span>Total</span>
-                      <span className="text-lg font-bold">{calculateTotal().toFixed(2)} €</span>
-                    </div>
-                  </div>
-                  
-                  {!showCheckoutForm ? (
-                    <Button 
-                      className="w-full mb-4 py-6 text-lg"
-                      onClick={handleProceedToCheckout}
-                    >
-                      Passer à la caisse <ChevronRight size={20} className="ml-2" />
-                    </Button>
-                  ) : !showPaymentForm ? (
-                    <Button 
-                      variant="outline"
-                      className="w-full mb-4"
-                      onClick={() => setShowCheckoutForm(false)}
-                    >
-                      Modifier le panier <ChevronUp size={16} className="ml-2" />
-                    </Button>
-                  ) : (
-                    <Button 
-                      variant="outline"
-                      className="w-full mb-4"
-                      onClick={() => setShowPaymentForm(false)}
-                      disabled={isProcessingPayment}
-                    >
-                      Modifier les informations <ChevronUp size={16} className="ml-2" />
-                    </Button>
-                  )}
-                  
-                  <div className="flex flex-col space-y-3 mb-6">
-                    <div className="text-sm text-center mb-2 font-medium">
-                      Méthodes de paiement acceptées
-                    </div>
-                    <div className="flex justify-center space-x-6 py-2">
-                      <CreditCard className="text-muted-foreground h-6 w-6" />
-                      <Wallet className="text-muted-foreground h-6 w-6" />
-                    </div>
-                  </div>
-                  
-                  <div className="text-sm text-muted-foreground border-t pt-4">
-                    <p className="flex items-center mb-3">
-                      <Clock size={16} className="mr-2 text-primary" />
-                      Livraison rapide sous 24h à 72h
-                    </p>
-                    <p className="flex items-start">
-                      <Info size={16} className="mr-2 mt-1 shrink-0 text-primary" />
-                      <span>
-                        En passant votre commande, vous acceptez nos{" "}
-                        <Link to="/legal" className="text-primary hover:underline">
-                          conditions générales de vente
-                        </Link>{" "}
-                        et notre{" "}
-                        <Link to="/legal" className="text-primary hover:underline">
-                          politique de confidentialité
-                        </Link>.
-                      </span>
-                    </p>
-                  </div>
-                </div>
+                <CartSummary 
+                  cartItems={cartItems}
+                  calculateTotal={calculateTotal}
+                  handleProceedToCheckout={handleProceedToCheckout}
+                  showCheckoutForm={showCheckoutForm}
+                  showPaymentForm={showPaymentForm}
+                  setShowCheckoutForm={setShowCheckoutForm}
+                  setShowPaymentForm={setShowPaymentForm}
+                  isProcessingPayment={isProcessingPayment}
+                />
               </div>
             </div>
           ) : (
-            <div className="bg-secondary py-20 px-4 rounded-xl text-center">
-              <ShoppingCart size={64} className="mx-auto mb-6 text-muted-foreground" />
-              <h2 className="text-2xl font-medium mb-2">Votre panier est vide</h2>
-              <p className="text-muted-foreground mb-8">
-                Parcourez notre catalogue pour découvrir des services qui boosteront votre présence en ligne.
-              </p>
-              <Button asChild size="lg" className="px-8 py-6 text-lg">
-                <Link to="/services">
-                  Découvrir nos services
-                </Link>
-              </Button>
-            </div>
+            <EmptyCart />
           )}
         </div>
       </main>
@@ -364,14 +257,5 @@ const Cart = () => {
     </motion.div>
   );
 };
-
-const formSchema = z.object({
-  fullName: z.string().min(3, {
-    message: "Le nom complet doit contenir au moins 3 caractères.",
-  }),
-  email: z.string().email({
-    message: "Veuillez entrer une adresse email valide.",
-  }),
-});
 
 export default Cart;
