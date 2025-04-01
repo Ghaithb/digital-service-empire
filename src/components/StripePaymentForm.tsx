@@ -18,6 +18,9 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
   const [isProcessing, setIsProcessing] = useState(false);
   const { toast } = useToast();
 
+  // Note: La clé publique Stripe est déjà configurée dans src/lib/stripe.ts
+  // La clé secrète Stripe doit être configurée dans le fichier src/backend/.env
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
