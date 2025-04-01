@@ -2,7 +2,7 @@
 import { loadStripe } from '@stripe/stripe-js';
 
 // Clé publique Stripe (pour le frontend)
-export const stripePromise = loadStripe("pk_live_51PUigvP6gU8ilmUx9sZ4L2e2Zcio8mF1ZaVqCFaGDSuD9OGzQpPv6Zs3RLbTchCVfSVG4GpbDIXE3hhEfkb1ERgx00qqKKiAOu");
+export const stripePromise = loadStripe("pk_test_51PUigvP6gU8ilmUx9sZ4L2e2Zcio8mF1ZaVqCFaGDSuD9OGzQpP");
 
 // Types pour les paiements
 export interface PaymentData {
