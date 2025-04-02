@@ -18,6 +18,7 @@ import Dashboard from "../pages/Dashboard";
 // New pages based on the dropdown menus
 import Testimonials from "../pages/Testimonials";
 import Blog from "../pages/Blog";
+import BlogPost from "../pages/BlogPost";
 import Contact from "../pages/Contact";
 import OrderTracking from "../pages/OrderTracking";
 import Loyalty from "../pages/Loyalty";
@@ -70,6 +71,7 @@ const App = () => (
             <Route path="/about" element={<About />} />
             <Route path="/testimonials" element={<Testimonials />} />
             <Route path="/blog" element={<Blog />} />
+            <Route path="/blog/:id" element={<BlogPost />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/loyalty" element={<Loyalty />} />
