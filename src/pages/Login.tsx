@@ -1,11 +1,31 @@
 
-import React from "react";
+import React, { useEffect } from "react";
 import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import AuthTabs from "@/components/AuthForms";
+import { useAuth } from "@/components/AuthContext";
 
 const Login = () => {
+  const { isAuthenticated, isAdmin, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  // Récupérer l'URL de redirection si disponible
+  const from = location.state?.from?.pathname || "/";
+  
+  useEffect(() => {
+    if (!loading && isAuthenticated) {
+      // Si l'utilisateur est déjà connecté, rediriger vers la destination appropriée
+      if (isAdmin) {
+        navigate("/dashboard");
+      } else {
+        navigate("/account");
+      }
+    }
+  }, [isAuthenticated, isAdmin, loading, navigate]);
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -26,7 +46,13 @@ const Login = () => {
             </p>
           </div>
           
-          <AuthTabs />
+          {loading ? (
+            <div className="flex justify-center py-8">
+              <div className="animate-spin w-8 h-8 rounded-full border-t-2 border-primary"></div>
+            </div>
+          ) : (
+            <AuthTabs />
+          )}
         </div>
       </main>
       

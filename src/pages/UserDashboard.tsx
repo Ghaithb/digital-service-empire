@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { getCurrentUser, isAuthenticated, logoutUser } from "@/lib/auth";
+import { useAuth } from "@/components/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import {
   Card,
@@ -34,43 +33,20 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { UserAuth } from "@/lib/auth";
 import { Order } from "@/lib/orders";
 
 const UserDashboard = () => {
-  const [user, setUser] = useState<UserAuth | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user, logout } = useAuth();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const authenticated = isAuthenticated();
-      if (!authenticated) {
-        navigate("/login");
-        return;
-      }
-      
-      try {
-        const userData = await getCurrentUser();
-        if (!userData) {
-          navigate("/login");
-          return;
-        }
-        
-        setUser(userData);
-        loadUserOrders();
-      } catch (error) {
-        console.error("Erreur d'authentification:", error);
-        navigate("/login");
-      }
-    };
-
-    checkAuth();
-  }, [navigate]);
+    loadUserOrders();
+  }, []);
 
   const loadUserOrders = async () => {
     setIsLoading(true);
@@ -101,11 +77,8 @@ const UserDashboard = () => {
   };
 
   const handleLogout = () => {
-    logoutUser();
-    toast({
-      title: "Déconnexion réussie",
-      description: "Vous avez été déconnecté avec succès.",
-    });
+    logout();
+    navigate('/');
   };
 
   const handleViewOrderDetails = (order: Order) => {

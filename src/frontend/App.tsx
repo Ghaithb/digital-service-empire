@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import Index from "../pages/Index";
 import Services from "../pages/Services";
@@ -27,8 +27,31 @@ import FAQ from "../pages/FAQ";
 import Login from "../pages/Login";
 import UserDashboard from "../pages/UserDashboard";
 import AuthCallback from "../pages/AuthCallback";
+import { useAuth } from "@/lib/auth";
 
 const queryClient = new QueryClient();
+
+// Auth Protected Route component
+const ProtectedRoute = ({ children, allowedRole, redirectTo = "/login" }) => {
+  const { user, loading, isAuthenticated, isAdmin } = useAuth();
+  
+  if (loading) {
+    return <div className="min-h-screen flex justify-center items-center">
+      <div className="animate-spin w-8 h-8 border-t-2 border-primary rounded-full"></div>
+    </div>;
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to={redirectTo} replace />;
+  }
+  
+  // Check role if specified
+  if (allowedRole === "admin" && !isAdmin) {
+    return <Navigate to="/" replace />;
+  }
+  
+  return children;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -56,11 +79,21 @@ const App = () => (
             
             {/* Authentication and user routes */}
             <Route path="/login" element={<Login />} />
-            <Route path="/account" element={<UserDashboard />} />
             <Route path="/auth-callback" element={<AuthCallback />} />
             
-            {/* Admin dashboard */}
-            <Route path="/dashboard" element={<Dashboard />} />
+            {/* Protected user routes */}
+            <Route path="/account" element={
+              <ProtectedRoute>
+                <UserDashboard />
+              </ProtectedRoute>
+            } />
+            
+            {/* Protected admin routes */}
+            <Route path="/dashboard" element={
+              <ProtectedRoute allowedRole="admin">
+                <Dashboard />
+              </ProtectedRoute>
+            } />
             
             <Route path="*" element={<NotFound />} />
           </Routes>

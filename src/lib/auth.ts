@@ -132,6 +132,22 @@ export const isAdmin = async (): Promise<boolean> => {
   }
 };
 
+// Fonction pour vérifier si l'utilisateur a un rôle spécifique
+export const hasRole = async (role: 'user' | 'admin'): Promise<boolean> => {
+  try {
+    const user = await getCurrentUser();
+    
+    if (!user) {
+      return false;
+    }
+    
+    return user.role === role;
+  } catch (error) {
+    console.error('Erreur lors de la vérification des rôles:', error);
+    return false;
+  }
+};
+
 // Fonction de protection de routes pour les admins
 export const requireAdmin = async (navigate: (path: string) => void): Promise<boolean> => {
   try {
@@ -148,29 +164,6 @@ export const requireAdmin = async (navigate: (path: string) => void): Promise<bo
     navigate('/');
     return false;
   }
-};
-
-// Hook personnalisé pour l'authentification
-export const useAuth = () => {
-  const [user, setUser] = useState<UserAuth | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
-  
-  useEffect(() => {
-    const fetchUser = async () => {
-      try {
-        const userData = await getCurrentUser();
-        setUser(userData);
-      } catch (error) {
-        console.error('Erreur d\'authentification:', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    fetchUser();
-  }, []);
-  
-  return { user, loading, isAuthenticated: !!user, isAdmin: user?.role === 'admin' };
 };
 
 // Fonction pour traiter le callback de l'authentification par OAuth
