@@ -167,12 +167,19 @@ export const requireAdmin = async (navigate: (path: string) => void): Promise<bo
 };
 
 // Fonction pour traiter le callback de l'authentification par OAuth
-export const processAuthCallback = (): void => {
+export const processAuthCallback = async (): Promise<void> => {
   const urlParams = new URLSearchParams(window.location.search);
   const token = urlParams.get('token');
   
-  if (token) {
-    localStorage.setItem('authToken', token);
-    window.location.href = '/'; // Rediriger vers la page d'accueil
+  if (!token) {
+    throw new Error('Aucun token trouvé dans l\'URL');
   }
+  
+  // Stocker le token et attendre un peu pour s'assurer que tout est mis à jour
+  localStorage.setItem('authToken', token);
+  
+  // Attendre que le token soit bien enregistré
+  await new Promise(resolve => setTimeout(resolve, 100));
+  
+  // Retourner sans redirection, car la redirection sera gérée par le composant
 };
