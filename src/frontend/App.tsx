@@ -27,7 +27,7 @@ import FAQ from "../pages/FAQ";
 import Login from "../pages/Login";
 import UserDashboard from "../pages/UserDashboard";
 import AuthCallback from "../pages/AuthCallback";
-import { useAuth } from "@/lib/auth";
+import { useAuth } from "@/components/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -83,7 +83,7 @@ const App = () => (
             
             {/* Protected user routes */}
             <Route path="/account" element={
-              <ProtectedRoute>
+              <ProtectedRoute allowedRole="user">
                 <UserDashboard />
               </ProtectedRoute>
             } />
