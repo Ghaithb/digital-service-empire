@@ -163,14 +163,6 @@ const Navbar = () => {
                               <span>Avis client</span>
                             </Link>
                           </li>
-                          <li>
-                            <Link
-                              to="/blog"
-                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
-                            >
-                              <span>Blog</span>
-                            </Link>
-                          </li>
                         </ul>
                       </NavigationMenuContent>
                     )}
@@ -188,26 +180,10 @@ const Navbar = () => {
                           </li>
                           <li>
                             <Link
-                              to="/order-tracking"
-                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
-                            >
-                              <span>Suivre ma commande</span>
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
                               to="/contact"
                               className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
                             >
                               <span>Nous Contacter</span>
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="/loyalty"
-                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
-                            >
-                              <span>Fidélité & Parrainage</span>
                             </Link>
                           </li>
                         </ul>
@@ -338,9 +314,6 @@ const Navbar = () => {
                           <DropdownMenuItem asChild>
                             <Link to="/testimonials">Avis client</Link>
                           </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to="/blog">Blog</Link>
-                          </DropdownMenuItem>
                         </div>
                       )}
                       
@@ -350,13 +323,7 @@ const Navbar = () => {
                             <Link to="/dashboard">Mon compte</Link>
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
-                            <Link to="/order-tracking">Suivre ma commande</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
                             <Link to="/contact">Nous Contacter</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to="/loyalty">Fidélité & Parrainage</Link>
                           </DropdownMenuItem>
                         </div>
                       )}

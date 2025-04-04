@@ -1,3 +1,4 @@
+
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -133,50 +134,37 @@ const Index = () => {
                   whileHover={{ y: -5 }}
                   className="group"
                 >
-                  <Link 
-                    to={`/services/category/${category.id}`} 
-                    className="block h-full neo p-6 rounded-xl transition-all duration-300"
+                  <Link
+                    to={`/services/category/${category.id}`}
+                    className="block p-6 rounded-xl bg-card border hover:shadow-md transition-all"
                   >
-                    <div className="mb-4">
-                      <category.icon size={32} className="text-primary" />
+                    <div className="mb-4 w-12 h-12 bg-primary/10 rounded-full flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                      <category.icon size={24} />
                     </div>
-                    <h3 className="text-xl font-medium mb-2 group-hover:text-primary transition-colors">
-                      {category.name}
-                    </h3>
-                    <p className="text-muted-foreground mb-4">
-                      {category.description}
-                    </p>
-                    <div className="text-primary flex items-center text-sm font-medium">
-                      Découvrir <ArrowRight size={14} className="ml-1 group-hover:translate-x-1 transition-transform" />
+                    <h3 className="font-medium text-lg mb-2">{category.name}</h3>
+                    <p className="text-muted-foreground text-sm mb-4 line-clamp-2">{category.description}</p>
+                    <div className="flex items-center text-primary font-medium text-sm group-hover:translate-x-1 transition-transform">
+                      Découvrir <ArrowRight size={16} className="ml-1" />
                     </div>
                   </Link>
                 </motion.div>
               ))}
             </div>
-          </div>
-        </section>
-        
-        <TestimonialSection />
-        <NewsletterSignup />
-        
-        {/* CTA section */}
-        <section className="py-16 bg-primary/5">
-          <div className="container px-4 mx-auto">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl md:text-4xl font-bold mb-6">
-                Prêt à propulser votre présence sur les réseaux sociaux ?
-              </h2>
-              <p className="text-muted-foreground mb-8 text-lg">
-                Rejoignez des milliers de créateurs de contenu qui font confiance à nos services pour développer leur audience et augmenter leur engagement.
-              </p>
+            
+            <div className="text-center mt-10">
               <Button size="lg" asChild>
                 <Link to="/services">
-                  Commencer maintenant <ArrowRight size={16} className="ml-2" />
+                  Voir tous les services
+                  <ArrowRight size={16} className="ml-2" />
                 </Link>
               </Button>
             </div>
           </div>
         </section>
+        
+        <TestimonialSection />
+        
+        <NewsletterSignup />
       </main>
       
       <Footer />

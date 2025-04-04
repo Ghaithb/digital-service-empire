@@ -41,7 +41,6 @@ const Footer = () => {
                 { name: "Notre parcours", path: "/about" },
                 { name: "Avis clients", path: "/testimonials" },
                 { name: "FAQ", path: "/faq" },
-                { name: "Blog", path: "/blog" },
                 { name: "Contact", path: "/contact" },
               ].map((link) => (
                 <li key={link.name}>
@@ -77,8 +76,6 @@ const Footer = () => {
             <ul className="space-y-3">
               {[
                 { name: "Mon compte", path: "/dashboard" },
-                { name: "Suivre ma commande", path: "/order-tracking" },
-                { name: "Fidélité & Parrainage", path: "/loyalty" },
                 { name: "FAQ", path: "/faq" },
                 { name: "Politique de confidentialité", path: "/legal" },
                 { name: "Conditions générales", path: "/legal" },

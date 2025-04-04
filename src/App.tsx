@@ -17,10 +17,7 @@ import Dashboard from "./pages/Dashboard";
 
 // New pages based on the dropdown menus
 import Testimonials from "./pages/Testimonials";
-import Blog from "./pages/Blog";
 import Contact from "./pages/Contact";
-import OrderTracking from "./pages/OrderTracking";
-import Loyalty from "./pages/Loyalty";
 import FAQ from "./pages/FAQ";
 
 const queryClient = new QueryClient();
@@ -41,10 +38,7 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/about" element={<About />} />
             <Route path="/testimonials" element={<Testimonials />} />
-            <Route path="/blog" element={<Blog />} />
             <Route path="/contact" element={<Contact />} />
-            <Route path="/order-tracking" element={<OrderTracking />} />
-            <Route path="/loyalty" element={<Loyalty />} />
             <Route path="/legal" element={<Legal />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />

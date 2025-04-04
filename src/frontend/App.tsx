@@ -17,12 +17,7 @@ import Dashboard from "../pages/Dashboard";
 
 // New pages based on the dropdown menus
 import Testimonials from "../pages/Testimonials";
-import Blog from "../pages/Blog";
-import BlogPost from "../pages/BlogPost";
-import BlogEditor from "../pages/BlogEditor";
 import Contact from "../pages/Contact";
-import OrderTracking from "../pages/OrderTracking";
-import Loyalty from "../pages/Loyalty";
 import FAQ from "../pages/FAQ";
 
 // Authentication and user pages
@@ -71,24 +66,7 @@ const App = () => (
             <Route path="/cart" element={<Cart />} />
             <Route path="/about" element={<About />} />
             <Route path="/testimonials" element={<Testimonials />} />
-            
-            {/* Blog routes */}
-            <Route path="/blog" element={<Blog />} />
-            <Route path="/blog/:id" element={<BlogPost />} />
-            <Route path="/blog/new" element={
-              <ProtectedRoute allowedRole="user">
-                <BlogEditor />
-              </ProtectedRoute>
-            } />
-            <Route path="/blog/edit/:id" element={
-              <ProtectedRoute allowedRole="user">
-                <BlogEditor />
-              </ProtectedRoute>
-            } />
-            
             <Route path="/contact" element={<Contact />} />
-            <Route path="/order-tracking" element={<OrderTracking />} />
-            <Route path="/loyalty" element={<Loyalty />} />
             <Route path="/legal" element={<Legal />} />
             <Route path="/faq" element={<FAQ />} />
             <Route path="/order-confirmation" element={<OrderConfirmation />} />
