@@ -4,7 +4,8 @@ import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
 import { createPaymentSession, PaymentData } from "@/lib/stripe";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Lock } from "lucide-react";
+import { Shield, Lock, CreditCard, CheckCircle } from "lucide-react";
+import { useAuth } from "@/components/AuthContext";
 
 interface StripePaymentFormProps {
   paymentData: PaymentData;
@@ -16,15 +17,41 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
   const stripe = useStripe();
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [cardComplete, setCardComplete] = useState(false);
   const { toast } = useToast();
-
-  // Note: La clé publique Stripe est déjà configurée dans src/lib/stripe.ts
-  // La clé secrète Stripe doit être configurée dans le fichier src/backend/.env
+  const { user } = useAuth();
+  
+  const CARD_ELEMENT_OPTIONS = {
+    style: {
+      base: {
+        fontSize: '16px',
+        color: '#424770',
+        '::placeholder': {
+          color: '#aab7c4',
+        },
+        ':-webkit-autofill': {
+          color: '#424770',
+        },
+      },
+      invalid: {
+        color: '#9e2146',
+        '::placeholder': {
+          color: '#9e2146',
+        },
+      },
+    },
+    hidePostalCode: true,
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!stripe || !elements) {
+      toast({
+        title: "Erreur",
+        description: "Stripe n'est pas encore chargé",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -38,7 +65,7 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
     setIsProcessing(true);
 
     try {
-      // Vérifier si tous les liens sociaux sont renseignés
+      // Vérifie si tous les liens sociaux nécessaires sont renseignés
       const missingLinks = paymentData.items.filter(item => !item.socialMediaLink);
       if (missingLinks.length > 0) {
         toast({
@@ -48,6 +75,12 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
         });
         setIsProcessing(false);
         return;
+      }
+
+      // Pré-remplir les informations utilisateur si disponibles
+      if (user) {
+        paymentData.email = user.email;
+        paymentData.fullName = user.name;
       }
 
       // Créer une session de paiement
@@ -94,27 +127,26 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="p-4 border rounded-md bg-card">
-        <CardElement
-          options={{
-            style: {
-              base: {
-                fontSize: '16px',
-                color: '#424770',
-                '::placeholder': {
-                  color: '#aab7c4',
-                },
-              },
-              invalid: {
-                color: '#9e2146',
-              },
-            },
-            hidePostalCode: true,
-          }}
-        />
+      <div className="p-5 border rounded-md bg-card">
+        <div className="mb-4 flex items-center">
+          <CreditCard className="mr-2 h-5 w-5 text-primary" />
+          <h3 className="font-medium">Informations de carte bancaire</h3>
+        </div>
+        
+        <div className="p-4 border rounded-md bg-background">
+          <CardElement 
+            options={CARD_ELEMENT_OPTIONS}
+            onChange={(e) => setCardComplete(e.complete)} 
+            className="py-2"
+          />
+        </div>
+        
+        <div className="mt-3 text-sm text-muted-foreground">
+          Pour le test, utilisez le numéro 4242 4242 4242 4242, une date d'expiration future et un code CVC à 3 chiffres.
+        </div>
       </div>
       
-      <div className="text-sm text-muted-foreground mb-4 space-y-2">
+      <div className="space-y-3 text-sm text-muted-foreground">
         <div className="flex items-center">
           <Lock className="mr-2 h-4 w-4 text-green-500" />
           <p>Paiement sécurisé via Stripe. Vos données de carte sont cryptées et sécurisées.</p>
@@ -123,14 +155,18 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
           <Shield className="mr-2 h-4 w-4 text-green-500" />
           <p>Protection anti-fraude et garantie de remboursement incluses.</p>
         </div>
+        <div className="flex items-center">
+          <CheckCircle className="mr-2 h-4 w-4 text-green-500" />
+          <p>Livraison garantie ou remboursement intégral.</p>
+        </div>
       </div>
       
       <Button
         type="submit"
-        disabled={!stripe || isProcessing}
-        className="w-full"
+        disabled={!stripe || isProcessing || !cardComplete}
+        className="w-full py-6 text-base font-medium"
       >
-        {isProcessing ? "Traitement en cours..." : "Payer et finaliser la commande"}
+        {isProcessing ? "Traitement en cours..." : `Payer ${paymentData.amount.toFixed(2)} € et finaliser la commande`}
       </Button>
     </form>
   );

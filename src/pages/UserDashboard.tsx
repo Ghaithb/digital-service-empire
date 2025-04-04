@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -11,6 +12,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
+  CardFooter,
 } from "@/components/ui/card";
 import {
   Table,
@@ -28,11 +30,20 @@ import {
   Clock,
   XCircle,
   Eye,
+  CreditCard,
+  UserCog,
+  Bell,
+  Shield
 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import PaymentStatusIndicator from "@/components/PaymentStatusIndicator";
 import { Order } from "@/lib/orders";
 
 const UserDashboard = () => {
@@ -40,13 +51,33 @@ const UserDashboard = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(null);
   const [detailsOpen, setDetailsOpen] = useState<boolean>(false);
+  const [passwordOpen, setPasswordOpen] = useState<boolean>(false);
+  const [emailNotifications, setEmailNotifications] = useState<boolean>(true);
+  const [marketingEmails, setMarketingEmails] = useState<boolean>(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
 
+  // New state for account settings
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
+  
+  // Password fields
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
   useEffect(() => {
     loadUserOrders();
-  }, []);
+    
+    // Initialize user data
+    if (user) {
+      setName(user.name || "");
+      setEmail(user.email || "");
+    }
+  }, [user]);
 
   const loadUserOrders = async () => {
     setIsLoading(true);
@@ -122,6 +153,44 @@ const UserDashboard = () => {
     }
   };
 
+  const handleSaveProfile = () => {
+    toast({
+      title: "Profil mis à jour",
+      description: "Vos informations ont été enregistrées avec succès.",
+    });
+  };
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Erreur",
+        description: "Les nouveaux mots de passe ne correspondent pas.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Here you would typically call an API to update the password
+    toast({
+      title: "Mot de passe modifié",
+      description: "Votre mot de passe a été mis à jour avec succès.",
+    });
+    
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+    setPasswordOpen(false);
+  };
+  
+  const handleSaveNotificationSettings = () => {
+    toast({
+      title: "Préférences mises à jour",
+      description: "Vos préférences de notification ont été enregistrées.",
+    });
+  };
+
   if (isLoading) {
     return (
       <motion.div
@@ -172,7 +241,7 @@ const UserDashboard = () => {
           </div>
           
           <Tabs defaultValue="orders" className="w-full">
-            <TabsList className="grid w-full max-w-md grid-cols-2 mb-8">
+            <TabsList className="grid w-full max-w-md grid-cols-3 mb-8">
               <TabsTrigger value="orders">
                 <ShoppingBag className="mr-2 h-4 w-4" />
                 Mes commandes
@@ -180,6 +249,10 @@ const UserDashboard = () => {
               <TabsTrigger value="profile">
                 <User className="mr-2 h-4 w-4" />
                 Mon profil
+              </TabsTrigger>
+              <TabsTrigger value="settings">
+                <UserCog className="mr-2 h-4 w-4" />
+                Paramètres
               </TabsTrigger>
             </TabsList>
             
@@ -250,33 +323,184 @@ const UserDashboard = () => {
             </TabsContent>
             
             <TabsContent value="profile" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Informations personnelles</CardTitle>
+                    <CardDescription>
+                      Modifiez vos informations personnelles
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Nom complet</Label>
+                      <Input 
+                        id="name"
+                        value={name}
+                        onChange={(e) => setName(e.target.value)} 
+                        placeholder="Votre nom complet"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input 
+                        id="email" 
+                        type="email" 
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="votre@email.com" 
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Téléphone (optionnel)</Label>
+                      <Input 
+                        id="phone"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)} 
+                        placeholder="Votre numéro de téléphone" 
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button onClick={handleSaveProfile}>
+                      Enregistrer les modifications
+                    </Button>
+                  </CardFooter>
+                </Card>
+                
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Adresse</CardTitle>
+                    <CardDescription>
+                      Votre adresse de facturation
+                    </CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Adresse complète</Label>
+                      <Textarea 
+                        id="address" 
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        placeholder="Numéro, rue, ville, code postal, pays"
+                        rows={4}
+                      />
+                    </div>
+                  </CardContent>
+                  <CardFooter>
+                    <Button onClick={handleSaveProfile}>
+                      Enregistrer l'adresse
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </div>
+              
               <Card>
                 <CardHeader>
-                  <CardTitle>Informations personnelles</CardTitle>
+                  <CardTitle>Sécurité</CardTitle>
                   <CardDescription>
-                    Consultez et modifiez vos informations personnelles
+                    Gérez la sécurité de votre compte
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                    <div>
-                      <p className="text-sm font-medium text-muted-foreground">Nom</p>
-                      <p className="font-medium">{user?.name}</p>
+                  <Button variant="outline" onClick={() => setPasswordOpen(true)}>
+                    <Shield className="mr-2 h-4 w-4" />
+                    Changer mon mot de passe
+                  </Button>
+                </CardContent>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle>Moyens de paiement</CardTitle>
+                  <CardDescription>
+                    Gérez vos moyens de paiement
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="flex items-center justify-between border p-4 rounded-md">
+                    <div className="flex items-center gap-3">
+                      <CreditCard className="h-8 w-8 text-primary" />
+                      <div>
+                        <p className="font-medium">Carte Visa</p>
+                        <p className="text-sm text-muted-foreground">**** **** **** 4242</p>
+                      </div>
                     </div>
                     <div>
-                      <p className="text-sm font-medium text-muted-foreground">Email</p>
-                      <p className="font-medium">{user?.email}</p>
+                      <p className="text-xs text-muted-foreground">Expire 12/25</p>
                     </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button variant="outline">
+                    <CreditCard className="mr-2 h-4 w-4" />
+                    Ajouter un moyen de paiement
+                  </Button>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="settings" className="space-y-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Préférences de notification</CardTitle>
+                  <CardDescription>
+                    Contrôlez comment vous recevez les notifications
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-6">
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="email-notifications">Notifications par email</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Recevez des mises à jour sur vos commandes par email
+                      </p>
+                    </div>
+                    <Switch 
+                      id="email-notifications" 
+                      checked={emailNotifications}
+                      onCheckedChange={setEmailNotifications}
+                    />
                   </div>
                   
                   <Separator />
                   
-                  <div>
-                    <h3 className="text-lg font-medium mb-2">Programme de fidélité</h3>
-                    <Button onClick={() => navigate("/loyalty")}>
-                      Accéder à mon espace fidélité
-                    </Button>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="marketing-emails">Emails marketing</Label>
+                      <p className="text-sm text-muted-foreground">
+                        Recevez des promotions et des offres spéciales
+                      </p>
+                    </div>
+                    <Switch 
+                      id="marketing-emails" 
+                      checked={marketingEmails}
+                      onCheckedChange={setMarketingEmails}
+                    />
                   </div>
+                </CardContent>
+                <CardFooter>
+                  <Button onClick={handleSaveNotificationSettings}>
+                    <Bell className="mr-2 h-4 w-4" />
+                    Enregistrer les préférences
+                  </Button>
+                </CardFooter>
+              </Card>
+              
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-destructive">Zone dangereuse</CardTitle>
+                  <CardDescription>
+                    Actions irréversibles sur votre compte
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    La suppression de votre compte est définitive et supprimera toutes vos données.
+                  </p>
+                  <Button variant="destructive">
+                    Supprimer mon compte
+                  </Button>
                 </CardContent>
               </Card>
             </TabsContent>
@@ -297,10 +521,7 @@ const UserDashboard = () => {
             <div className="space-y-4">
               <div>
                 <h3 className="text-sm font-medium text-muted-foreground mb-2">Statut</h3>
-                <div className="flex items-center gap-2">
-                  {getStatusIcon(selectedOrder.paymentStatus)}
-                  <span>{getStatusText(selectedOrder.paymentStatus)}</span>
-                </div>
+                <PaymentStatusIndicator status={selectedOrder.paymentStatus as any} />
               </div>
               
               <Separator />
@@ -326,8 +547,69 @@ const UserDashboard = () => {
                 <span className="font-medium">Total</span>
                 <span className="font-bold">{selectedOrder.total.toFixed(2)} €</span>
               </div>
+              
+              <div className="pt-4">
+                <Button className="w-full" variant="outline">
+                  Télécharger la facture
+                </Button>
+              </div>
             </div>
           )}
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={passwordOpen} onOpenChange={setPasswordOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Changer votre mot de passe</DialogTitle>
+            <DialogDescription>
+              Entrez votre mot de passe actuel et votre nouveau mot de passe.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <form onSubmit={handleChangePassword} className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="current-password">Mot de passe actuel</Label>
+              <Input 
+                id="current-password" 
+                type="password" 
+                value={currentPassword}
+                onChange={(e) => setCurrentPassword(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="new-password">Nouveau mot de passe</Label>
+              <Input 
+                id="new-password" 
+                type="password" 
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </div>
+            
+            <div className="space-y-2">
+              <Label htmlFor="confirm-password">Confirmer le nouveau mot de passe</Label>
+              <Input 
+                id="confirm-password" 
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)} 
+                required
+              />
+            </div>
+            
+            <div className="flex justify-end gap-2">
+              <Button type="button" variant="outline" onClick={() => setPasswordOpen(false)}>
+                Annuler
+              </Button>
+              <Button type="submit">
+                Changer le mot de passe
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
       

@@ -9,9 +9,16 @@ export type PaymentStatus = "succeeded" | "processing" | "failed" | "pending" | 
 interface PaymentStatusIndicatorProps {
   status: PaymentStatus;
   className?: string;
+  size?: "sm" | "md" | "lg";
+  showText?: boolean;
 }
 
-const PaymentStatusIndicator = ({ status, className }: PaymentStatusIndicatorProps) => {
+const PaymentStatusIndicator = ({ 
+  status, 
+  className, 
+  size = "md", 
+  showText = true 
+}: PaymentStatusIndicatorProps) => {
   // Map the order status values to our component's internal values
   let displayStatus: "succeeded" | "processing" | "failed";
   
@@ -49,20 +56,29 @@ const PaymentStatusIndicator = ({ status, className }: PaymentStatusIndicatorPro
 
   const config = statusConfig[displayStatus];
   const Icon = config.icon;
+  
+  const sizeClasses = {
+    sm: "p-1 text-xs",
+    md: "p-2 text-sm",
+    lg: "p-3 text-base"
+  };
 
   return (
     <div 
       className={cn(
-        "flex items-center gap-2 p-3 rounded-md border",
+        "flex items-center gap-2 rounded-md border",
         config.bgColor,
         config.borderColor,
+        sizeClasses[size],
         className
       )}
     >
-      <Icon className={config.color} size={20} />
-      <span className={cn("font-medium", config.color)}>
-        {config.text}
-      </span>
+      <Icon className={config.color} size={size === "sm" ? 16 : size === "lg" ? 24 : 20} />
+      {showText && (
+        <span className={cn("font-medium", config.color)}>
+          {config.text}
+        </span>
+      )}
     </div>
   );
 };

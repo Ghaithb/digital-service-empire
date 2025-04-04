@@ -14,40 +14,69 @@ import NotFound from "./pages/NotFound";
 import Legal from "./pages/Legal";
 import OrderConfirmation from "./pages/OrderConfirmation";
 import Dashboard from "./pages/Dashboard";
+import { AuthProvider } from "@/components/AuthContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 // New pages based on the dropdown menus
 import Testimonials from "./pages/Testimonials";
 import Contact from "./pages/Contact";
 import FAQ from "./pages/FAQ";
+import Login from "./pages/Login";
+import UserDashboard from "./pages/UserDashboard";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AnimatePresence mode="wait">
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/services" element={<Services />} />
-            <Route path="/services/category/:value" element={<Services />} />
-            <Route path="/services/platform/:value" element={<Services />} />
-            <Route path="/service/:id" element={<ServiceDetail />} />
-            <Route path="/cart" element={<Cart />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/testimonials" element={<Testimonials />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/legal" element={<Legal />} />
-            <Route path="/faq" element={<FAQ />} />
-            <Route path="/order-confirmation" element={<OrderConfirmation />} />
-            <Route path="/dashboard" element={<Dashboard />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AnimatePresence>
-      </BrowserRouter>
-    </TooltipProvider>
+    <AuthProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AnimatePresence mode="wait">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/services" element={<Services />} />
+              <Route path="/services/category/:value" element={<Services />} />
+              <Route path="/services/platform/:value" element={<Services />} />
+              <Route path="/service/:id" element={<ServiceDetail />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/about" element={<About />} />
+              <Route path="/testimonials" element={<Testimonials />} />
+              <Route path="/contact" element={<Contact />} />
+              <Route path="/legal" element={<Legal />} />
+              <Route path="/faq" element={<FAQ />} />
+              <Route path="/order-confirmation" element={<OrderConfirmation />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/auth-callback" element={<AuthCallback />} />
+              
+              {/* Protected user routes */}
+              <Route 
+                path="/account/*" 
+                element={
+                  <ProtectedRoute allowedRole="user">
+                    <UserDashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              {/* Protected admin routes */}
+              <Route 
+                path="/dashboard/*" 
+                element={
+                  <ProtectedRoute allowedRole="admin">
+                    <Dashboard />
+                  </ProtectedRoute>
+                } 
+              />
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AnimatePresence>
+        </BrowserRouter>
+      </TooltipProvider>
+    </AuthProvider>
   </QueryClientProvider>
 );
 
