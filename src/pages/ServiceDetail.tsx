@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -38,7 +37,6 @@ const ServiceDetail = () => {
       const serviceData = getServiceById(id);
       if (serviceData) {
         setService(serviceData);
-        // Sélectionner la première variante par défaut ou celle marquée comme populaire
         if (serviceData.variants && serviceData.variants.length > 0) {
           const popularVariant = serviceData.variants.find(v => v.popular);
           const variant = popularVariant || serviceData.variants[0];
@@ -71,7 +69,6 @@ const ServiceDetail = () => {
   const handleAddToCart = () => {
     if (!service) return;
     
-    // Vérifier si tous les liens sont remplis
     const emptyLinks = socialMediaLinks.filter(link => !link.trim());
     if (emptyLinks.length > 0) {
       toast({
@@ -82,7 +79,6 @@ const ServiceDetail = () => {
       return;
     }
     
-    // Ajouter chaque lien comme un article séparé
     socialMediaLinks.forEach(link => {
       const price = selectedVariant ? selectedVariant.price : service.price;
       const total = price * quantity;
@@ -104,10 +100,27 @@ const ServiceDetail = () => {
     toast({
       title: "Service ajouté au panier",
       description: `${quantity} × ${service.title}${variantInfo} pour ${linkCount} compte${linkCount > 1 ? 's' : ''} a été ajouté à votre panier.`,
+      action: (
+        <div className="flex gap-2 mt-2">
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={() => navigate('/cart')}
+          >
+            Passer au paiement
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              document.getElementById('toast-close')?.click();
+            }}
+          >
+            Continuer
+          </Button>
+        </div>
+      )
     });
-    
-    // Rediriger vers le panier
-    navigate("/cart");
   };
   
   const serviceType = selectedVariant?.type || service?.category;
@@ -140,7 +153,6 @@ const ServiceDetail = () => {
           </Button>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
-            {/* Image */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -159,7 +171,6 @@ const ServiceDetail = () => {
               </div>
             </motion.div>
             
-            {/* Info */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -205,7 +216,6 @@ const ServiceDetail = () => {
                 {service.description}
               </p>
               
-              {/* Section liens sociaux (multiple) */}
               <div className="mb-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="font-medium">Liens des comptes</h3>
@@ -247,7 +257,6 @@ const ServiceDetail = () => {
                 </div>
               </div>
               
-              {/* Variants Selector */}
               {service.variants && service.variants.length > 0 && (
                 <ServiceVariantSelector
                   service={service}

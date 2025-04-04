@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Service, ServiceVariant } from "@/lib/data";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,7 @@ interface ServiceCardProps {
 
 const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps) => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [imageLoaded, setImageLoaded] = useState(false);
   const [selectedVariant, setSelectedVariant] = useState<ServiceVariant | null>(
     service.variants && service.variants.length > 0 
@@ -53,9 +54,30 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
     addToCart(cartItem);
     
     const variantInfo = selectedVariant ? ` (${selectedVariant.title})` : '';
+    
     toast({
       title: "Service ajouté au panier",
       description: `${service.title}${variantInfo} a été ajouté à votre panier.`,
+      action: (
+        <div className="flex gap-2 mt-2">
+          <Button 
+            variant="default" 
+            size="sm" 
+            onClick={() => navigate('/cart')}
+          >
+            Passer au paiement
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => {
+              document.getElementById('toast-close')?.click();
+            }}
+          >
+            Continuer
+          </Button>
+        </div>
+      )
     });
   };
   
