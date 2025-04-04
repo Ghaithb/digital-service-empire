@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -71,7 +72,10 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
             variant="outline" 
             size="sm" 
             onClick={() => {
-              document.getElementById('toast-close')?.click();
+              const closeButton = document.querySelector('[data-state="open"] [data-radix-toast-close]');
+              if (closeButton instanceof HTMLElement) {
+                closeButton.click();
+              }
             }}
           >
             Continuer

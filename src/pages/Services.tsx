@@ -43,9 +43,11 @@ const Services = () => {
   useEffect(() => {
     if (type === "category" && value) {
       setSelectedCategory(value as ServiceCategory);
+      setSelectedPlatform("all");
       setActiveTab("category");
     } else if (type === "platform" && value) {
       setSelectedPlatform(value as SocialPlatform);
+      setSelectedCategory("all");
       setActiveTab("platform");
     } else {
       setActiveTab("all");
@@ -74,11 +76,15 @@ const Services = () => {
       result = result.filter(service => service.platform === selectedPlatform);
     }
     
-    // Type filter (looking at variants)
+    // Type filter (looking at variants or service type)
     if (selectedType !== "all") {
-      result = result.filter(service => 
-        service.variants?.some(variant => variant.type === selectedType)
-      );
+      result = result.filter(service => {
+        // Check if the service itself has the type
+        if (service.type === selectedType) return true;
+        
+        // Or check if any of its variants has the type
+        return service.variants?.some(variant => variant.type === selectedType);
+      });
     }
     
     // Sort
