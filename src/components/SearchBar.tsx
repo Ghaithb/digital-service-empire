@@ -45,14 +45,21 @@ const SearchBar = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    // Search logic
+    // Search logic - improved to make filtering more accurate
     if (query.trim().length > 1) {
       const allServices = getAllServices();
+      // Enhanced filtering logic
       const filtered = allServices.filter(service => 
         service.title.toLowerCase().includes(query.toLowerCase()) ||
         service.description.toLowerCase().includes(query.toLowerCase()) ||
         service.platform.toLowerCase().includes(query.toLowerCase()) ||
-        service.category.toLowerCase().includes(query.toLowerCase())
+        service.category.toLowerCase().includes(query.toLowerCase()) ||
+        // Also check variants if they exist
+        (service.variants && service.variants.some(variant => 
+          variant.title.toLowerCase().includes(query.toLowerCase()) ||
+          (variant.description && variant.description.toLowerCase().includes(query.toLowerCase())) ||
+          (variant.type && variant.type.toLowerCase().includes(query.toLowerCase()))
+        ))
       );
       
       setResults(filtered.map(service => ({
