@@ -76,13 +76,10 @@ const Services = () => {
       result = result.filter(service => service.platform === selectedPlatform);
     }
     
-    // Type filter (looking at variants or service type)
+    // Type filter (looking at variants only since Service doesn't have a type property)
     if (selectedType !== "all") {
       result = result.filter(service => {
-        // Check if the service itself has the type
-        if (service.type === selectedType) return true;
-        
-        // Or check if any of its variants has the type
+        // Check if any of its variants has the type
         return service.variants?.some(variant => variant.type === selectedType);
       });
     }
