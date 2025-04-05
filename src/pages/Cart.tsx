@@ -21,6 +21,9 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Veuillez entrer une adresse email valide.",
   }),
+  phoneNumber: z.string().min(10, {
+    message: "Veuillez entrer un numéro de téléphone valide.",
+  }).optional(),
 });
 
 const Cart = () => {
@@ -29,7 +32,7 @@ const Cart = () => {
   const [showCheckoutForm, setShowCheckoutForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [customerInfo, setCustomerInfo] = useState<{ fullName: string; email: string } | null>(null);
+  const [customerInfo, setCustomerInfo] = useState<{ fullName: string; email: string; phoneNumber?: string } | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -124,7 +127,8 @@ const Cart = () => {
   const handlePaymentSubmit = (values: z.infer<typeof formSchema>) => {
     setCustomerInfo({
       fullName: values.fullName,
-      email: values.email
+      email: values.email,
+      phoneNumber: values.phoneNumber
     });
     
     const order = createOrder(cartItems, values.fullName, values.email);
@@ -182,6 +186,7 @@ const Cart = () => {
       })),
       email: customerInfo?.email || '',
       fullName: customerInfo?.fullName || '',
+      phoneNumber: customerInfo?.phoneNumber || '',
       orderId: currentOrderId || undefined
     };
   };

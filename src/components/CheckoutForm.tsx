@@ -5,7 +5,7 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { CreditCard, Mail, User } from "lucide-react";
+import { CreditCard, Mail, User, Phone } from "lucide-react";
 import {
   Form,
   FormControl,
@@ -23,15 +23,9 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Veuillez entrer une adresse email valide.",
   }),
-  cardNumber: z.string().regex(/^\d{16}$/, {
-    message: "Le numéro de carte doit contenir 16 chiffres.",
-  }),
-  expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, {
-    message: "Format: MM/YY",
-  }),
-  cvv: z.string().regex(/^\d{3,4}$/, {
-    message: "Le CVV doit contenir 3 ou 4 chiffres.",
-  }),
+  phoneNumber: z.string().min(10, {
+    message: "Veuillez entrer un numéro de téléphone valide.",
+  }).optional(),
 });
 
 interface CheckoutFormProps {
@@ -45,9 +39,7 @@ const CheckoutForm = ({ onSubmit, isProcessing }: CheckoutFormProps) => {
     defaultValues: {
       fullName: "",
       email: "",
-      cardNumber: "",
-      expiryDate: "",
-      cvv: "",
+      phoneNumber: "",
     },
   });
 
@@ -93,79 +85,22 @@ const CheckoutForm = ({ onSubmit, isProcessing }: CheckoutFormProps) => {
                 </FormItem>
               )}
             />
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="text-lg font-medium">Informations de paiement</h3>
             <FormField
               control={form.control}
-              name="cardNumber"
+              name="phoneNumber"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Numéro de carte</FormLabel>
+                  <FormLabel>Numéro de téléphone (WhatsApp)</FormLabel>
                   <FormControl>
                     <div className="relative">
-                      <CreditCard className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                      <Input
-                        className="pl-10"
-                        placeholder="1234 5678 9012 3456"
-                        {...field}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "").slice(0, 16);
-                          field.onChange(value);
-                        }}
-                      />
+                      <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                      <Input className="pl-10" placeholder="+33612345678" {...field} />
                     </div>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="grid grid-cols-2 gap-4">
-              <FormField
-                control={form.control}
-                name="expiryDate"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Date d'expiration</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="MM/YY" 
-                        {...field}
-                        onChange={(e) => {
-                          let value = e.target.value.replace(/\D/g, "");
-                          if (value.length > 2) {
-                            value = value.slice(0, 2) + "/" + value.slice(2, 4);
-                          }
-                          field.onChange(value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="cvv"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>CVV</FormLabel>
-                    <FormControl>
-                      <Input 
-                        placeholder="123" 
-                        {...field}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, "").slice(0, 4);
-                          field.onChange(value);
-                        }}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
           </div>
 
           <Button 

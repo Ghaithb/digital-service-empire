@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
-import { createPaymentSession, PaymentData } from "@/lib/stripe";
+import { createPaymentSession, PaymentData, sendOrderNotifications } from "@/lib/stripe";
 import { useToast } from "@/hooks/use-toast";
 import { Shield, Lock, CreditCard, CheckCircle } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
@@ -81,6 +81,12 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
       if (user) {
         paymentData.email = user.email;
         paymentData.fullName = user.name;
+      }
+
+      // Envoyer les notifications avant même le paiement en mode développement
+      // pour faciliter les tests
+      if (process.env.NODE_ENV === 'development') {
+        sendOrderNotifications(paymentData);
       }
 
       // Créer une session de paiement

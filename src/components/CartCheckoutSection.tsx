@@ -24,6 +24,9 @@ const formSchema = z.object({
   email: z.string().email({
     message: "Veuillez entrer une adresse email valide.",
   }),
+  phoneNumber: z.string().min(10, {
+    message: "Veuillez entrer un numéro de téléphone valide.",
+  }).optional(),
 });
 
 const CartCheckoutSection = ({
