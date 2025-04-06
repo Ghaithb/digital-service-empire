@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -83,9 +82,7 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
             Continuer
           </Button>
         </div>
-      ),
-      // Added a specific id to make it easier to close
-      id: "add-to-cart-toast"
+      )
     });
   };
   

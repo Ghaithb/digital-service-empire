@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -123,9 +122,8 @@ const ServiceDetail = () => {
             Continuer
           </Button>
         </div>
-      ),
-      // Added a specific id to make it easier to find and close
-      id: "add-to-cart-detail-toast"
+      )
+      // Removed the id property as it's not supported
     });
   };
   

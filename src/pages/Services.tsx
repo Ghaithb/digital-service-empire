@@ -96,8 +96,10 @@ const Services = () => {
         if (service.variants && service.variants.length > 0) {
           return service.variants.some(variant => variant.type === selectedType);
         }
-        // For services without variants, check if service type matches
-        return service.type === selectedType;
+        
+        // For services without variants, there is no service.type property
+        // We'll consider these services don't match the filter
+        return false;
       });
     }
     
