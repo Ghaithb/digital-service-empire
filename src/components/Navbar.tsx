@@ -68,8 +68,7 @@ const Navbar = () => {
   const navLinks = [
     { name: "Accueil", path: "/" },
     { name: "Services", path: "/services", hasDropdown: true },
-    { name: "Parcours & Avis", path: "/about", hasDropdown: true },
-    { name: "Espace client", path: "/dashboard", hasDropdown: true }
+    { name: "Parcours & Avis", path: "/about", hasDropdown: true }
   ];
 
   return (
@@ -161,29 +160,6 @@ const Navbar = () => {
                               className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
                             >
                               <span>Avis client</span>
-                            </Link>
-                          </li>
-                        </ul>
-                      </NavigationMenuContent>
-                    )}
-                    
-                    {link.name === "Espace client" && (
-                      <NavigationMenuContent className="bg-background/95 backdrop-blur-md p-4 shadow-lg rounded-md">
-                        <ul className="space-y-1 w-[200px]">
-                          <li>
-                            <Link
-                              to="/dashboard"
-                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
-                            >
-                              <span>Mon compte</span>
-                            </Link>
-                          </li>
-                          <li>
-                            <Link
-                              to="/contact"
-                              className="flex items-center space-x-2 p-2 rounded-md hover:bg-secondary"
-                            >
-                              <span>Nous Contacter</span>
                             </Link>
                           </li>
                         </ul>
@@ -313,17 +289,6 @@ const Navbar = () => {
                           </DropdownMenuItem>
                           <DropdownMenuItem asChild>
                             <Link to="/testimonials">Avis client</Link>
-                          </DropdownMenuItem>
-                        </div>
-                      )}
-                      
-                      {link.name === "Espace client" && (
-                        <div className="p-2">
-                          <DropdownMenuItem asChild>
-                            <Link to="/dashboard">Mon compte</Link>
-                          </DropdownMenuItem>
-                          <DropdownMenuItem asChild>
-                            <Link to="/contact">Nous Contacter</Link>
                           </DropdownMenuItem>
                         </div>
                       )}

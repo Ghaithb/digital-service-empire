@@ -41,7 +41,6 @@ const Footer = () => {
                 { name: "Notre parcours", path: "/about" },
                 { name: "Avis clients", path: "/testimonials" },
                 { name: "FAQ", path: "/faq" },
-                { name: "Contact", path: "/contact" },
               ].map((link) => (
                 <li key={link.name}>
                   <Link
@@ -75,7 +74,6 @@ const Footer = () => {
             <h3 className="font-medium text-lg mb-4">Support</h3>
             <ul className="space-y-3">
               {[
-                { name: "Mon compte", path: "/dashboard" },
                 { name: "FAQ", path: "/faq" },
                 { name: "Politique de confidentialité", path: "/legal" },
                 { name: "Conditions générales", path: "/legal" },
