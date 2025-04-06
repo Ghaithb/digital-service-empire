@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
@@ -13,7 +12,6 @@ import {
 } from "@/components/ui/accordion";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import ChatWidget from "@/components/ChatWidget";
 
 // Données FAQ
 const faqData = [
@@ -210,7 +208,6 @@ const FAQ = () => {
       </main>
       
       <Footer />
-      <ChatWidget />
     </motion.div>
   );
 };

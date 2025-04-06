@@ -1,4 +1,3 @@
-
 import { useEffect } from "react";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -17,7 +16,6 @@ import KeyAdvantages from "@/components/KeyAdvantages";
 import PlatformShowcase from "@/components/PlatformShowcase";
 import SpotifyServices from "@/components/SpotifyServices";
 import NewsletterSignup from "@/components/NewsletterSignup";
-import ChatWidget from "@/components/ChatWidget";
 
 const Index = () => {
   // Scroll to top on page load
@@ -168,7 +166,6 @@ const Index = () => {
       </main>
       
       <Footer />
-      <ChatWidget />
     </motion.div>
   );
 };
