@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -113,13 +114,18 @@ const ServiceDetail = () => {
             variant="outline" 
             size="sm" 
             onClick={() => {
-              document.getElementById('toast-close')?.click();
+              const closeButton = document.querySelector('[data-state="open"] [data-radix-toast-close]');
+              if (closeButton instanceof HTMLElement) {
+                closeButton.click();
+              }
             }}
           >
             Continuer
           </Button>
         </div>
-      )
+      ),
+      // Added a specific id to make it easier to find and close
+      id: "add-to-cart-detail-toast"
     });
   };
   
@@ -293,6 +299,7 @@ const ServiceDetail = () => {
                     size="icon"
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
                     disabled={quantity <= 1}
+                    aria-label="Diminuer la quantité"
                   >
                     -
                   </Button>
@@ -301,6 +308,7 @@ const ServiceDetail = () => {
                     variant="outline"
                     size="icon"
                     onClick={() => setQuantity(quantity + 1)}
+                    aria-label="Augmenter la quantité"
                   >
                     +
                   </Button>
@@ -309,6 +317,7 @@ const ServiceDetail = () => {
                 <Button 
                   className="flex-1"
                   onClick={handleAddToCart}
+                  aria-label="Ajouter au panier"
                 >
                   <ShoppingCart size={18} className="mr-2" />
                   Ajouter au panier

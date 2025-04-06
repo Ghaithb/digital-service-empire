@@ -1,6 +1,6 @@
 
 import { motion } from "framer-motion";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { 
   Music, 
   Youtube, 
@@ -17,6 +17,8 @@ import {
 import { Button } from "@/components/ui/button";
 
 const PlatformShowcase = () => {
+  const navigate = useNavigate();
+  
   const platforms = [
     {
       id: "tiktok",
@@ -68,28 +70,32 @@ const PlatformShowcase = () => {
       name: "Abonnés",
       icon: User,
       color: "#E1306C",
-      platform: "tiktok"
+      platform: "tiktok",
+      url: "/services/category/followers"
     },
     {
       id: "likes",
       name: "Likes",
       icon: Heart,
       color: "#E1306C",
-      platform: "tiktok"
+      platform: "tiktok",
+      url: "/services/category/likes"
     },
     {
       id: "views",
       name: "Vues",
       icon: ThumbsUp,
       color: "#E1306C",
-      platform: "tiktok"
+      platform: "tiktok",
+      url: "/services/category/views"
     },
     {
       id: "shares",
       name: "Partages",
       icon: Share,
       color: "#E1306C",
-      platform: "tiktok"
+      platform: "tiktok",
+      url: "/services/category/shares"
     }
   ];
 
@@ -110,6 +116,10 @@ const PlatformShowcase = () => {
       opacity: 1,
       transition: { duration: 0.5 }
     }
+  };
+  
+  const handleServiceClick = (url: string) => {
+    navigate(url);
   };
 
   return (
@@ -145,7 +155,7 @@ const PlatformShowcase = () => {
               className="flex flex-col items-center"
             >
               <Link to={platform.url} className="w-full">
-                <div className="bg-secondary/30 p-4 rounded-xl flex flex-col items-center transition-all hover:shadow-md">
+                <div className="bg-secondary/30 p-4 rounded-xl flex flex-col items-center transition-all hover:shadow-md hover:bg-secondary/50">
                   {typeof platform.icon === "string" ? (
                     <img 
                       src={platform.icon} 
@@ -183,9 +193,10 @@ const PlatformShowcase = () => {
               <motion.div
                 key={service.id}
                 variants={itemVariants}
-                className="bg-white p-4 rounded-lg shadow-sm"
+                className="bg-white p-4 rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-all"
+                onClick={() => handleServiceClick(service.url)}
               >
-                <Link to={`/services/category/${service.id}`} className="flex flex-col items-center">
+                <div className="flex flex-col items-center">
                   <div className="relative mb-4">
                     <div className="w-24 h-24 bg-red-500 rounded-lg shadow-md flex items-center justify-center">
                       <service.icon size={40} color="white" />
@@ -206,7 +217,7 @@ const PlatformShowcase = () => {
                     </div>
                   </div>
                   <p className="mt-2 text-primary font-medium">À partir de 3,00€</p>
-                </Link>
+                </div>
               </motion.div>
             ))}
           </motion.div>

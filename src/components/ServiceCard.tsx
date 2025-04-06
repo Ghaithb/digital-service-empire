@@ -41,6 +41,9 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
   );
   
   const handleAddToCart = () => {
+    // Check if service exists
+    if (!service) return;
+    
     const currentPrice = selectedVariant ? selectedVariant.price : service.price;
     
     const cartItem: CartItemWithLink = {
@@ -80,8 +83,17 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
             Continuer
           </Button>
         </div>
-      )
+      ),
+      // Added a specific id to make it easier to close
+      id: "add-to-cart-toast"
     });
+  };
+  
+  const handleDetailsClick = (e: React.MouseEvent) => {
+    // Prevent default only if needed
+    if (service && service.id) {
+      navigate(`/service/${service.id}`);
+    }
   };
   
   const delay = index * 0.1;
@@ -103,48 +115,54 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
       className={featured ? "md:col-span-2" : ""}
     >
       <Card className="h-full overflow-hidden transition-all duration-300 hover:shadow-md bg-card">
-        <div className="relative overflow-hidden">
-          <div 
-            className={`w-full aspect-video bg-muted ${imageLoaded ? 'image-loaded' : 'image-loading'}`}
-          >
-            <img
-              src={service.imageUrl}
-              alt={service.title}
-              className="w-full h-full object-cover transition-all duration-300"
-              onLoad={() => setImageLoaded(true)}
-              loading="lazy"
-            />
-          </div>
-          
-          {service.popular && (
-            <div className="absolute top-4 right-4">
-              <span className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full">
-                Populaire
-              </span>
-            </div>
-          )}
-          
-          <div className="absolute top-4 left-4 flex items-center">
+        <Link to={`/service/${service.id}`} className="block">
+          <div className="relative overflow-hidden">
             <div 
-              className="w-8 h-8 rounded-full flex items-center justify-center"
-              style={{ 
-                backgroundColor: 
-                  service.platform === 'instagram' ? '#E1306C' :
-                  service.platform === 'facebook' ? '#1877F2' :
-                  service.platform === 'twitter' ? '#1DA1F2' :
-                  service.platform === 'youtube' ? '#FF0000' :
-                  service.platform === 'tiktok' ? '#000000' :
-                  service.platform === 'snapchat' ? '#FFFC00' :
-                  service.platform === 'spotify' ? '#1DB954' : '#0077B5'
-              }}
+              className={`w-full aspect-video bg-muted ${imageLoaded ? 'image-loaded' : 'image-loading'}`}
             >
-              <service.icon size={16} className="text-white" />
+              <img
+                src={service.imageUrl}
+                alt={service.title}
+                className="w-full h-full object-cover transition-all duration-300"
+                onLoad={() => setImageLoaded(true)}
+                loading="lazy"
+              />
+            </div>
+            
+            {service.popular && (
+              <div className="absolute top-4 right-4">
+                <span className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full">
+                  Populaire
+                </span>
+              </div>
+            )}
+            
+            <div className="absolute top-4 left-4 flex items-center">
+              <div 
+                className="w-8 h-8 rounded-full flex items-center justify-center"
+                style={{ 
+                  backgroundColor: 
+                    service.platform === 'instagram' ? '#E1306C' :
+                    service.platform === 'facebook' ? '#1877F2' :
+                    service.platform === 'twitter' ? '#1DA1F2' :
+                    service.platform === 'youtube' ? '#FF0000' :
+                    service.platform === 'tiktok' ? '#000000' :
+                    service.platform === 'snapchat' ? '#FFFC00' :
+                    service.platform === 'spotify' ? '#1DB954' : '#0077B5'
+                }}
+              >
+                <service.icon size={16} className="text-white" />
+              </div>
             </div>
           </div>
-        </div>
+        </Link>
         
         <CardHeader className="pt-4 pb-2">
-          <CardTitle className="text-xl">{service.title}</CardTitle>
+          <CardTitle className="text-xl">
+            <Link to={`/service/${service.id}`} className="hover:text-primary transition-colors">
+              {service.title}
+            </Link>
+          </CardTitle>
           <CardDescription>{service.deliveryTime}</CardDescription>
         </CardHeader>
         
@@ -206,11 +224,16 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
               size="sm" 
               className="transition-all duration-300"
               onClick={handleAddToCart}
+              aria-label={`Ajouter ${service.title} au panier`}
             >
               <ShoppingCart size={16} className="mr-2" /> 
               Ajouter
             </Button>
-            <Button size="sm" asChild>
+            <Button 
+              size="sm" 
+              onClick={handleDetailsClick}
+              asChild
+            >
               <Link to={`/service/${service.id}`}>
                 Détails
               </Link>

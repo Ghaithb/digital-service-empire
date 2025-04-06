@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -31,6 +31,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const Services = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { type, value } = useParams<{ type?: string; value?: string }>();
   const [filteredServices, setFilteredServices] = useState<Service[]>(services);
   const [searchTerm, setSearchTerm] = useState("");
@@ -44,19 +45,19 @@ const Services = () => {
   useEffect(() => {
     if (type === "category" && value) {
       setSelectedCategory(value as ServiceCategory);
-      setSelectedPlatform("all");
       setActiveTab("category");
     } else if (type === "platform" && value) {
       setSelectedPlatform(value as SocialPlatform);
-      setSelectedCategory("all");
       setActiveTab("platform");
     } else {
-      // Reset filters when navigating to the main services page
-      setActiveTab("all");
-      setSelectedCategory("all");
-      setSelectedPlatform("all");
+      if (!location.search) { // Only reset if there are no query params
+        setActiveTab("all");
+        setSelectedCategory("all");
+        setSelectedPlatform("all");
+        setSelectedType("all");
+      }
     }
-  }, [type, value]);
+  }, [type, value, location]);
   
   // Apply filters
   useEffect(() => {
@@ -64,10 +65,18 @@ const Services = () => {
     
     // Text search
     if (searchTerm) {
-      result = result.filter(service => 
-        service.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
-        service.description.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+      result = result.filter(service => {
+        const serviceMatch = service.title.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            service.description.toLowerCase().includes(searchTerm.toLowerCase());
+        
+        // Also check variants for matches
+        const variantMatch = service.variants?.some(variant => 
+          variant.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          variant.description.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        
+        return serviceMatch || variantMatch;
+      });
     }
     
     // Category filter
@@ -87,8 +96,8 @@ const Services = () => {
         if (service.variants && service.variants.length > 0) {
           return service.variants.some(variant => variant.type === selectedType);
         }
-        // For services without variants, return false as they don't have a type
-        return false;
+        // For services without variants, check if service type matches
+        return service.type === selectedType;
       });
     }
     
@@ -117,6 +126,30 @@ const Services = () => {
     setSortBy("popular");
     // Also navigate to base services URL to clear URL params
     navigate("/services");
+  };
+  
+  const updateFilters = (category: ServiceCategory | "all", platform: SocialPlatform | "all", type: ServiceType | "all") => {
+    setSelectedCategory(category);
+    setSelectedPlatform(platform);
+    setSelectedType(type);
+    
+    // Update URL based on filters
+    if (category !== "all" && platform === "all" && type === "all") {
+      navigate(`/services/category/${category}`);
+    } else if (category === "all" && platform !== "all" && type === "all") {
+      navigate(`/services/platform/${platform}`);
+    } else {
+      // For multiple filters or no filters, use the base URL
+      navigate("/services");
+    }
+  };
+  
+  const handleTabChange = (tab: string) => {
+    setActiveTab(tab);
+    
+    if (tab === "all") {
+      clearFilters();
+    }
   };
   
   const hasActiveFilters = searchTerm || selectedCategory !== "all" || selectedPlatform !== "all" || selectedType !== "all";
@@ -181,15 +214,9 @@ const Services = () => {
               </div>
             </div>
             
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+            <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
               <TabsList className="grid grid-cols-4 mb-6">
-                <TabsTrigger value="all" onClick={() => {
-                  setSelectedCategory("all");
-                  setSelectedPlatform("all");
-                  setSelectedType("all");
-                }}>
-                  Tous
-                </TabsTrigger>
+                <TabsTrigger value="all">Tous</TabsTrigger>
                 <TabsTrigger value="category">Catégories</TabsTrigger>
                 <TabsTrigger value="platform">Plateformes</TabsTrigger>
                 <TabsTrigger value="type">Types</TabsTrigger>
@@ -206,10 +233,7 @@ const Services = () => {
                   <Button
                     variant={selectedCategory === "all" ? "default" : "outline"}
                     size="sm"
-                    onClick={() => {
-                      setSelectedCategory("all");
-                      navigate("/services");
-                    }}
+                    onClick={() => updateFilters("all", selectedPlatform, selectedType)}
                     className="mb-2"
                   >
                     Toutes
@@ -220,10 +244,7 @@ const Services = () => {
                       key={category.id}
                       variant={selectedCategory === category.id ? "default" : "outline"}
                       size="sm"
-                      onClick={() => {
-                        setSelectedCategory(category.id as ServiceCategory);
-                        navigate(`/services/category/${category.id}`);
-                      }}
+                      onClick={() => updateFilters(category.id as ServiceCategory, selectedPlatform, selectedType)}
                       className="mb-2"
                     >
                       <category.icon size={16} className="mr-2" />
@@ -238,10 +259,7 @@ const Services = () => {
                   <Button
                     variant={selectedPlatform === "all" ? "default" : "outline"}
                     size="sm"
-                    onClick={() => {
-                      setSelectedPlatform("all");
-                      navigate("/services");
-                    }}
+                    onClick={() => updateFilters(selectedCategory, "all", selectedType)}
                     className="mb-2"
                   >
                     Toutes
@@ -252,10 +270,7 @@ const Services = () => {
                       key={platform.id}
                       variant={selectedPlatform === platform.id ? "default" : "outline"}
                       size="sm"
-                      onClick={() => {
-                        setSelectedPlatform(platform.id as SocialPlatform);
-                        navigate(`/services/platform/${platform.id}`);
-                      }}
+                      onClick={() => updateFilters(selectedCategory, platform.id as SocialPlatform, selectedType)}
                       className="mb-2"
                     >
                       <platform.icon size={16} className="mr-2" style={{ color: platform.color }} />
@@ -270,10 +285,7 @@ const Services = () => {
                   <Button
                     variant={selectedType === "all" ? "default" : "outline"}
                     size="sm"
-                    onClick={() => {
-                      setSelectedType("all");
-                      navigate("/services");
-                    }}
+                    onClick={() => updateFilters(selectedCategory, selectedPlatform, "all")}
                     className="mb-2"
                   >
                     Tous
@@ -284,9 +296,7 @@ const Services = () => {
                       key={type.id}
                       variant={selectedType === type.id ? "default" : "outline"}
                       size="sm"
-                      onClick={() => {
-                        setSelectedType(type.id as ServiceType);
-                      }}
+                      onClick={() => updateFilters(selectedCategory, selectedPlatform, type.id as ServiceType)}
                       className="mb-2"
                     >
                       <type.icon size={16} className="mr-2" />

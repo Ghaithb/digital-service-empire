@@ -38,6 +38,7 @@ const App = () => (
               <Route path="/services" element={<Services />} />
               <Route path="/services/category/:value" element={<Services />} />
               <Route path="/services/platform/:value" element={<Services />} />
+              <Route path="/services/type/:value" element={<Services />} /> {/* Added route for type filtering */}
               <Route path="/service/:id" element={<ServiceDetail />} />
               <Route path="/cart" element={<Cart />} />
               <Route path="/about" element={<About />} />
