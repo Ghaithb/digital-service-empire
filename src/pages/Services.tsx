@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -45,10 +44,19 @@ const Services = () => {
   useEffect(() => {
     if (type === "category" && value) {
       setSelectedCategory(value as ServiceCategory);
+      setSelectedPlatform("all");
+      setSelectedType("all");
       setActiveTab("category");
     } else if (type === "platform" && value) {
       setSelectedPlatform(value as SocialPlatform);
+      setSelectedCategory("all");
+      setSelectedType("all");
       setActiveTab("platform");
+    } else if (type === "type" && value) {
+      setSelectedType(value as ServiceType);
+      setSelectedCategory("all");
+      setSelectedPlatform("all");
+      setActiveTab("type");
     } else {
       if (!location.search) { // Only reset if there are no query params
         setActiveTab("all");
@@ -89,16 +97,14 @@ const Services = () => {
       result = result.filter(service => service.platform === selectedPlatform);
     }
     
-    // Type filter - Fixed to correctly check variants
+    // Type filter - Check variants for the selected type
     if (selectedType !== "all") {
       result = result.filter(service => {
         // Check if service has variants and any of them match the selected type
         if (service.variants && service.variants.length > 0) {
           return service.variants.some(variant => variant.type === selectedType);
         }
-        
-        // For services without variants, there is no service.type property
-        // We'll consider these services don't match the filter
+        // Services without variants don't match any type filter
         return false;
       });
     }
@@ -131,19 +137,34 @@ const Services = () => {
   };
   
   const updateFilters = (category: ServiceCategory | "all", platform: SocialPlatform | "all", type: ServiceType | "all") => {
-    setSelectedCategory(category);
-    setSelectedPlatform(platform);
-    setSelectedType(type);
-    
     // Update URL based on filters
     if (category !== "all" && platform === "all" && type === "all") {
       navigate(`/services/category/${category}`);
     } else if (category === "all" && platform !== "all" && type === "all") {
       navigate(`/services/platform/${platform}`);
+    } else if (category === "all" && platform === "all" && type !== "all") {
+      navigate(`/services/type/${type}`);
+    } else if (category !== "all" && platform !== "all" && type === "all") {
+      // Add support for combined filters (category + platform)
+      navigate(`/services?category=${category}&platform=${platform}`);
+    } else if (category !== "all" && platform === "all" && type !== "all") {
+      // Add support for combined filters (category + type)
+      navigate(`/services?category=${category}&type=${type}`);
+    } else if (category === "all" && platform !== "all" && type !== "all") {
+      // Add support for combined filters (platform + type)
+      navigate(`/services?platform=${platform}&type=${type}`);
+    } else if (category !== "all" && platform !== "all" && type !== "all") {
+      // Add support for all three filters
+      navigate(`/services?category=${category}&platform=${platform}&type=${type}`);
     } else {
-      // For multiple filters or no filters, use the base URL
+      // For no filters, use the base URL
       navigate("/services");
     }
+    
+    // Set the selected filters
+    setSelectedCategory(category);
+    setSelectedPlatform(platform);
+    setSelectedType(type);
   };
   
   const handleTabChange = (tab: string) => {
@@ -153,6 +174,37 @@ const Services = () => {
       clearFilters();
     }
   };
+  
+  // Parse query parameters for combined filters
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const categoryParam = searchParams.get("category") as ServiceCategory | null;
+    const platformParam = searchParams.get("platform") as SocialPlatform | null;
+    const typeParam = searchParams.get("type") as ServiceType | null;
+    
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+    }
+    
+    if (platformParam) {
+      setSelectedPlatform(platformParam);
+    }
+    
+    if (typeParam) {
+      setSelectedType(typeParam);
+    }
+    
+    // Set active tab based on which filters are present
+    if (categoryParam && !platformParam && !typeParam) {
+      setActiveTab("category");
+    } else if (!categoryParam && platformParam && !typeParam) {
+      setActiveTab("platform");
+    } else if (!categoryParam && !platformParam && typeParam) {
+      setActiveTab("type");
+    } else if (categoryParam || platformParam || typeParam) {
+      // If multiple filters are active, keep the current tab
+    }
+  }, [location.search]);
   
   const hasActiveFilters = searchTerm || selectedCategory !== "all" || selectedPlatform !== "all" || selectedType !== "all";
   
