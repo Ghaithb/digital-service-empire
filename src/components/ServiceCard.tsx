@@ -18,7 +18,6 @@ import {
   NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
   navigationMenuTriggerStyle,
@@ -133,7 +132,10 @@ const ServiceCard = ({ service, featured = false, index = 0 }: ServiceCardProps)
                   service.platform === 'instagram' ? '#E1306C' :
                   service.platform === 'facebook' ? '#1877F2' :
                   service.platform === 'twitter' ? '#1DA1F2' :
-                  service.platform === 'youtube' ? '#FF0000' : '#000'
+                  service.platform === 'youtube' ? '#FF0000' :
+                  service.platform === 'tiktok' ? '#000000' :
+                  service.platform === 'snapchat' ? '#FFFC00' :
+                  service.platform === 'spotify' ? '#1DB954' : '#0077B5'
               }}
             >
               <service.icon size={16} className="text-white" />

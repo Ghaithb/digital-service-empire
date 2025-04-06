@@ -45,22 +45,31 @@ const SearchBar = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    // Search logic - improved to make filtering more accurate
+    // Amélioration de la recherche pour inclure les variantes
     if (query.trim().length > 1) {
       const allServices = getAllServices();
-      // Enhanced filtering logic
-      const filtered = allServices.filter(service => 
-        service.title.toLowerCase().includes(query.toLowerCase()) ||
-        service.description.toLowerCase().includes(query.toLowerCase()) ||
-        service.platform.toLowerCase().includes(query.toLowerCase()) ||
-        service.category.toLowerCase().includes(query.toLowerCase()) ||
-        // Also check variants if they exist
-        (service.variants && service.variants.some(variant => 
-          variant.title.toLowerCase().includes(query.toLowerCase()) ||
-          (variant.description && variant.description.toLowerCase().includes(query.toLowerCase())) ||
-          (variant.type && variant.type.toLowerCase().includes(query.toLowerCase()))
-        ))
-      );
+      // Logique de filtrage améliorée
+      const filtered = allServices.filter(service => {
+        // Vérifier dans le service lui-même
+        const serviceMatches = 
+          service.title.toLowerCase().includes(query.toLowerCase()) ||
+          service.description.toLowerCase().includes(query.toLowerCase()) ||
+          service.platform.toLowerCase().includes(query.toLowerCase()) ||
+          service.category.toLowerCase().includes(query.toLowerCase());
+        
+        if (serviceMatches) return true;
+
+        // Vérifier dans les variantes si elles existent
+        if (service.variants && service.variants.length > 0) {
+          return service.variants.some(variant => 
+            variant.title.toLowerCase().includes(query.toLowerCase()) ||
+            (variant.description && variant.description.toLowerCase().includes(query.toLowerCase())) ||
+            (variant.type && variant.type.toLowerCase().includes(query.toLowerCase()))
+          );
+        }
+
+        return false;
+      });
       
       setResults(filtered.map(service => ({
         id: service.id,
@@ -148,7 +157,8 @@ const SearchBar = () => {
                             result.platform === "twitter" ? "#1DA1F2" :
                             result.platform === "youtube" ? "#FF0000" :
                             result.platform === "tiktok" ? "#000000" :
-                            result.platform === "snapchat" ? "#FFFC00" : "#0077B5"
+                            result.platform === "snapchat" ? "#FFFC00" : 
+                            result.platform === "spotify" ? "#1DB954" : "#0077B5"
                         }}
                       >
                         <result.icon size={16} className="text-white" />
