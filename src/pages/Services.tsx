@@ -43,24 +43,29 @@ const Services = () => {
   
   // Handle route params for filtering
   useEffect(() => {
+    console.log("Route params changed:", { type, value });
+    
     if (type === "category" && value) {
       // When category is selected from URL, reset other filters
       setSelectedCategory(value as ServiceCategory);
       setSelectedPlatform("all");
       setSelectedType("all");
       setActiveTab("category");
+      console.log("Setting category from URL param:", value);
     } else if (type === "platform" && value) {
       // When platform is selected from URL, reset other filters
       setSelectedPlatform(value as SocialPlatform);
       setSelectedCategory("all");
       setSelectedType("all");
       setActiveTab("platform");
+      console.log("Setting platform from URL param:", value);
     } else if (type === "type" && value) {
       // When type is selected from URL, reset other filters
       setSelectedType(value as ServiceType);
       setSelectedCategory("all");
       setSelectedPlatform("all");
       setActiveTab("type");
+      console.log("Setting type from URL param:", value);
     } else {
       // Only reset if there are no query params
       if (!location.search) {
@@ -68,6 +73,7 @@ const Services = () => {
         setSelectedCategory("all");
         setSelectedPlatform("all");
         setSelectedType("all");
+        console.log("Resetting all filters (no params)");
       }
     }
   }, [type, value, location]);
@@ -77,7 +83,8 @@ const Services = () => {
     console.log("Filtering with:", { 
       category: selectedCategory, 
       platform: selectedPlatform, 
-      type: selectedType 
+      type: selectedType,
+      searchTerm: searchTerm
     });
     
     let result = [...services];
@@ -98,7 +105,7 @@ const Services = () => {
       });
     }
     
-    // Category filter - ensure this is applied first
+    // Category filter
     if (selectedCategory !== "all") {
       result = result.filter(service => service.category === selectedCategory);
       console.log(`After category filter (${selectedCategory}):`, result.length);
@@ -199,19 +206,21 @@ const Services = () => {
     const platformParam = searchParams.get("platform") as SocialPlatform | null;
     const typeParam = searchParams.get("type") as ServiceType | null;
     
+    console.log("URL search params:", { categoryParam, platformParam, typeParam });
+    
     // Only update state if parameters exist and are different from current state
     if (categoryParam && categoryParam !== selectedCategory) {
-      console.log("Setting category from URL:", categoryParam);
+      console.log("Setting category from URL search:", categoryParam);
       setSelectedCategory(categoryParam);
     }
     
     if (platformParam && platformParam !== selectedPlatform) {
-      console.log("Setting platform from URL:", platformParam);
+      console.log("Setting platform from URL search:", platformParam);
       setSelectedPlatform(platformParam);
     }
     
     if (typeParam && typeParam !== selectedType) {
-      console.log("Setting type from URL:", typeParam);
+      console.log("Setting type from URL search:", typeParam);
       setSelectedType(typeParam);
     }
     
@@ -222,8 +231,12 @@ const Services = () => {
       setActiveTab("platform");
     } else if (!categoryParam && !platformParam && typeParam) {
       setActiveTab("type");
+    } else if (categoryParam || platformParam || typeParam) {
+      // If multiple filters are active, show the first one in hierarchy
+      if (categoryParam) setActiveTab("category");
+      else if (platformParam) setActiveTab("platform");
+      else if (typeParam) setActiveTab("type");
     }
-    // If multiple filters are active or no filters, don't change the active tab
   }, [location.search]);
   
   const hasActiveFilters = searchTerm || selectedCategory !== "all" || selectedPlatform !== "all" || selectedType !== "all";
