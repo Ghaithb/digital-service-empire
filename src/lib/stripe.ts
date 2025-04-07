@@ -29,20 +29,28 @@ export const sendOrderNotifications = async (orderData: PaymentData) => {
       `- Service: ${item.name}\n  Quantité: ${item.quantity}\n  Prix: ${item.price}€\n  Lien: ${item.socialMediaLink || 'Non fourni'}`
     ).join('\n\n');
 
+    // Contenu de l'email plus détaillé et formaté
     const emailContent = `
-Nouvelle commande reçue!
------------------------
-Client: ${orderData.fullName}
-Email: ${orderData.email}
-Téléphone: ${orderData.phoneNumber || 'Non fourni'}
-Montant total: ${orderData.amount.toFixed(2)}€
-ID commande: ${orderData.orderId}
+NOUVELLE COMMANDE - ${orderData.orderId || 'ID non disponible'}
+==================================================
+CLIENT: ${orderData.fullName}
+EMAIL: ${orderData.email}
+TÉLÉPHONE: ${orderData.phoneNumber || 'Non fourni'}
+MONTANT TOTAL: ${orderData.amount.toFixed(2)}€
+DATE: ${new Date().toLocaleString('fr-FR')}
 
-Détails des services:
+DÉTAILS DES SERVICES:
+==================================================
 ${itemsDetails}
+
+LIENS SOCIAUX:
+==================================================
+${orderData.items.map(item => `- ${item.name}: ${item.socialMediaLink || 'Non fourni'}`).join('\n')}
+
+Cette commande a été reçue et est en attente de traitement.
 `;
 
-    const whatsappContent = `🛒 *Nouvelle commande!* 🛒\n\nClient: ${orderData.fullName}\nMontant: ${orderData.amount.toFixed(2)}€\n\n${itemsDetails.replace(/\n/g, '\n')}`;
+    const whatsappContent = `🛒 *NOUVELLE COMMANDE!* 🛒\n\nClient: ${orderData.fullName}\nMontant: ${orderData.amount.toFixed(2)}€\n\n${itemsDetails.replace(/\n/g, '\n')}`;
 
     // En mode production, appeler les API d'emails et WhatsApp
     // En mode développement, simuler l'envoi
@@ -53,7 +61,7 @@ ${itemsDetails}
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           to: 'votre-email@exemple.com', // Remplacez par votre email
-          subject: `Nouvelle commande #${orderData.orderId}`,
+          subject: `📢 NOUVELLE COMMANDE #${orderData.orderId} - ${orderData.amount.toFixed(2)}€`,
           text: emailContent
         })
       });
@@ -71,6 +79,8 @@ ${itemsDetails}
       }
     } else {
       console.log('=== SIMULATION D\'ENVOI D\'EMAIL ===');
+      console.log('À: votre-email@exemple.com');
+      console.log(`Sujet: 📢 NOUVELLE COMMANDE #${orderData.orderId} - ${orderData.amount.toFixed(2)}€`);
       console.log(emailContent);
       console.log('=== SIMULATION D\'ENVOI WHATSAPP ===');
       console.log(whatsappContent);

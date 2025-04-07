@@ -916,37 +916,67 @@ passport.deserializeUser(async (id, done) => {
 // Fonction pour envoyer une notification lors de la création d'une commande
 const sendOrderNotification = async (paymentData, sessionId) => {
   try {
+    // Préparer les détails des items pour une meilleure lisibilité
+    const itemsDetails = paymentData.items.map(item => 
+      `- ${item.name} (Quantité: ${item.quantity}, Prix: ${item.price}€)
+       Lien social: ${item.socialMediaLink || 'Non fourni'}`
+    ).join('\n');
+
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: process.env.ADMIN_EMAIL,
-      subject: 'Nouvelle commande reçue',
+      subject: `📢 NOUVELLE COMMANDE - ${paymentData.amount}€ - ${paymentData.fullName}`,
       text: `
-        Une nouvelle commande a été créée.
+        ===== NOUVELLE COMMANDE =====
+        
         Client: ${paymentData.fullName} (${paymentData.email})
+        Téléphone: ${paymentData.phoneNumber || 'Non fourni'}
         Montant: ${paymentData.amount}€
         ID de session Stripe: ${sessionId}
+        Date: ${new Date().toLocaleString('fr-FR')}
         
-        Détails des services:
-        ${paymentData.items.map(item => 
-          `- ${item.name} (Quantité: ${item.quantity}, Prix: ${item.price}€)
-           Lien social: ${item.socialMediaLink || 'Non fourni'}`
-        ).join('\n')}
+        ===== DÉTAILS DES SERVICES =====
+        
+        ${itemsDetails}
+        
+        ===== ACTIONS REQUISES =====
+        
+        1. Vérifier les liens sociaux
+        2. Traiter la commande
+        3. Notifier le client une fois traité
       `,
       html: `
-        <h2>Nouvelle commande reçue</h2>
-        <p><strong>Client:</strong> ${paymentData.fullName} (${paymentData.email})</p>
-        <p><strong>Montant:</strong> ${paymentData.amount}€</p>
-        <p><strong>ID de session Stripe:</strong> ${sessionId}</p>
-        
-        <h3>Détails des services:</h3>
-        <ul>
-          ${paymentData.items.map(item => `
-            <li>
-              <strong>${item.name}</strong> (Quantité: ${item.quantity}, Prix: ${item.price}€)<br>
-              Lien social: ${item.socialMediaLink || 'Non fourni'}
-            </li>
-          `).join('')}
-        </ul>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 5px;">
+          <h2 style="color: #4a154b; border-bottom: 2px solid #4a154b; padding-bottom: 10px;">📢 NOUVELLE COMMANDE</h2>
+          
+          <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <p><strong>Client:</strong> ${paymentData.fullName} (${paymentData.email})</p>
+            <p><strong>Téléphone:</strong> ${paymentData.phoneNumber || 'Non fourni'}</p>
+            <p><strong>Montant:</strong> <span style="font-size: 1.2em; color: #2e7d32;">${paymentData.amount}€</span></p>
+            <p><strong>ID de session Stripe:</strong> ${sessionId}</p>
+            <p><strong>Date:</strong> ${new Date().toLocaleString('fr-FR')}</p>
+          </div>
+          
+          <h3 style="color: #4a154b;">Détails des services:</h3>
+          <ul style="list-style-type: none; padding-left: 0;">
+            ${paymentData.items.map(item => `
+              <li style="background-color: #f0f4fa; padding: 10px; margin-bottom: 10px; border-left: 4px solid #4a154b; border-radius: 3px;">
+                <strong>${item.name}</strong><br>
+                Quantité: ${item.quantity}, Prix unitaire: ${item.price}€<br>
+                <strong>Lien social:</strong> ${item.socialMediaLink ? `<a href="${item.socialMediaLink}">${item.socialMediaLink}</a>` : '<span style="color: #d32f2f;">Non fourni</span>'}
+              </li>
+            `).join('')}
+          </ul>
+          
+          <div style="margin-top: 30px; background-color: #fffde7; padding: 15px; border-left: 4px solid #fbc02d; border-radius: 3px;">
+            <h4 style="margin-top: 0; color: #f57c00;">Actions requises:</h4>
+            <ol>
+              <li>Vérifier les liens sociaux</li>
+              <li>Traiter la commande</li>
+              <li>Notifier le client une fois traité</li>
+            </ol>
+          </div>
+        </div>
       `
     });
     
@@ -962,43 +992,60 @@ const sendPaymentSuccessNotification = async (session) => {
     const customerEmail = session.customer_email || 'client@example.com';
     const customerName = session.metadata?.fullName || 'Client';
     const allLinks = session.metadata?.allLinks ? JSON.parse(session.metadata.allLinks) : [];
+    const amount = (session.amount_total || 0) / 100;
     
     // Email à l'administrateur
     await transporter.sendMail({
       from: process.env.EMAIL_FROM,
       to: process.env.ADMIN_EMAIL,
-      subject: 'Paiement confirmé',
+      subject: `✅ PAIEMENT CONFIRMÉ - ${amount}€ - ${customerName}`,
       text: `
-        Un paiement a été confirmé.
+        ===== PAIEMENT CONFIRMÉ =====
+        
         Client: ${customerName} (${customerEmail})
         ID de session Stripe: ${session.id}
-        Montant: ${(session.amount_total || 0) / 100}€
+        Montant: ${amount}€
+        Date: ${new Date().toLocaleString('fr-FR')}
         
-        Liens sociaux fournis:
+        ===== LIENS SOCIAUX FOURNIS =====
+        
         ${allLinks.map(item => 
-          `- Service: ${item.serviceId || 'N/A'}, Lien: ${item.link || 'Non fourni'}, Quantité: ${item.quantity || 1}`
-        ).join('\n')}
+          `- Service: ${item.serviceId || 'N/A'}
+           Lien: ${item.link || 'Non fourni'}
+           Quantité: ${item.quantity || 1}`
+        ).join('\n\n')}
+        
+        ===== ACTION REQUISE =====
         
         Merci de traiter cette commande rapidement.
       `,
       html: `
-        <h2>Paiement confirmé</h2>
-        <p><strong>Client:</strong> ${customerName} (${customerEmail})</p>
-        <p><strong>ID de session Stripe:</strong> ${session.id}</p>
-        <p><strong>Montant:</strong> ${(session.amount_total || 0) / 100}€</p>
-        
-        <h3>Liens sociaux fournis:</h3>
-        <ul>
-          ${allLinks.map(item => `
-            <li>
-              <strong>Service:</strong> ${item.serviceId || 'N/A'}<br>
-              <strong>Lien:</strong> ${item.link || 'Non fourni'}<br>
-              <strong>Quantité:</strong> ${item.quantity || 1}
-            </li>
-          `).join('')}
-        </ul>
-        
-        <p>Merci de traiter cette commande rapidement.</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 5px;">
+          <h2 style="color: #2e7d32; border-bottom: 2px solid #2e7d32; padding-bottom: 10px;">✅ PAIEMENT CONFIRMÉ</h2>
+          
+          <div style="background-color: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 20px;">
+            <p><strong>Client:</strong> ${customerName} (${customerEmail})</p>
+            <p><strong>ID de session Stripe:</strong> ${session.id}</p>
+            <p><strong>Montant:</strong> <span style="font-size: 1.2em; color: #2e7d32;">${amount}€</span></p>
+            <p><strong>Date:</strong> ${new Date().toLocaleString('fr-FR')}</p>
+          </div>
+          
+          <h3 style="color: #2e7d32;">Liens sociaux fournis:</h3>
+          <ul style="list-style-type: none; padding-left: 0;">
+            ${allLinks.map(item => `
+              <li style="background-color: #f0f4fa; padding: 10px; margin-bottom: 10px; border-left: 4px solid #2e7d32; border-radius: 3px;">
+                <strong>Service:</strong> ${item.serviceId || 'N/A'}<br>
+                <strong>Lien:</strong> ${item.link ? `<a href="${item.link}">${item.link}</a>` : '<span style="color: #d32f2f;">Non fourni</span>'}<br>
+                <strong>Quantité:</strong> ${item.quantity || 1}
+              </li>
+            `).join('')}
+          </ul>
+          
+          <div style="margin-top: 30px; background-color: #e8f5e9; padding: 15px; border-left: 4px solid #2e7d32; border-radius: 3px;">
+            <h4 style="margin-top: 0; color: #2e7d32;">Action requise:</h4>
+            <p>Merci de traiter cette commande rapidement.</p>
+          </div>
+        </div>
       `
     });
     
@@ -1013,7 +1060,7 @@ const sendPaymentSuccessNotification = async (session) => {
         Nous vous confirmons que votre paiement a bien été reçu.
         Votre commande est en cours de traitement.
         
-        Montant total: ${(session.amount_total || 0) / 100}€
+        Montant total: ${amount}€
         
         Nous allons traiter votre commande dans les plus brefs délais.
         
@@ -1021,18 +1068,20 @@ const sendPaymentSuccessNotification = async (session) => {
         L'équipe
       `,
       html: `
-        <h2>Votre commande est confirmée</h2>
-        <p>Bonjour ${customerName},</p>
-        
-        <p>Nous vous confirmons que votre paiement a bien été reçu.<br>
-        Votre commande est en cours de traitement.</p>
-        
-        <p><strong>Montant total:</strong> ${(session.amount_total || 0) / 100}€</p>
-        
-        <p>Nous allons traiter votre commande dans les plus brefs délais.</p>
-        
-        <p>Merci pour votre confiance,<br>
-        L'équipe</p>
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; padding: 20px; border-radius: 5px;">
+          <h2 style="color: #2e7d32;">Votre commande est confirmée</h2>
+          <p>Bonjour ${customerName},</p>
+          
+          <p>Nous vous confirmons que votre paiement a bien été reçu.<br>
+          Votre commande est en cours de traitement.</p>
+          
+          <p><strong>Montant total:</strong> ${amount}€</p>
+          
+          <p>Nous allons traiter votre commande dans les plus brefs délais.</p>
+          
+          <p>Merci pour votre confiance,<br>
+          L'équipe</p>
+        </div>
       `
     });
     
