@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -40,6 +39,22 @@ const Services = () => {
   const [selectedType, setSelectedType] = useState<ServiceType | "all">("all");
   const [sortBy, setSortBy] = useState("popular");
   const [activeTab, setActiveTab] = useState("all");
+  
+  // Handle search query from URL
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const searchQuery = searchParams.get("search");
+    
+    if (searchQuery) {
+      console.log("Search query from URL:", searchQuery);
+      setSearchTerm(searchQuery);
+      // When coming from search, reset other filters
+      setSelectedCategory("all");
+      setSelectedPlatform("all");
+      setSelectedType("all");
+      setActiveTab("all");
+    }
+  }, [location.search]);
   
   // Handle route params for filtering
   useEffect(() => {
@@ -98,11 +113,12 @@ const Services = () => {
         // Also check variants for matches
         const variantMatch = service.variants?.some(variant => 
           variant.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          variant.description.toLowerCase().includes(searchTerm.toLowerCase())
+          variant.description?.toLowerCase().includes(searchTerm.toLowerCase())
         );
         
         return serviceMatch || variantMatch;
       });
+      console.log(`After search filter (${searchTerm}):`, result.length);
     }
     
     // Category filter
@@ -146,7 +162,7 @@ const Services = () => {
   // Scroll to top when filters change
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [type, value]);
+  }, [type, value, searchTerm]);
   
   const clearFilters = () => {
     setSearchTerm("");

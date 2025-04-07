@@ -45,21 +45,23 @@ const SearchBar = () => {
   }, [isOpen]);
 
   useEffect(() => {
-    // Amélioration de la recherche pour inclure les variantes
+    // Improved search that includes variants and handles edge cases better
     if (query.trim().length > 1) {
       const allServices = getAllServices();
-      // Logique de filtrage améliorée
+      console.log(`Searching for "${query}" in ${allServices.length} services`);
+      
+      // Enhanced filtering logic with better matching
       const filtered = allServices.filter(service => {
-        // Vérifier dans le service lui-même
+        // Check in the service itself (case-insensitive)
         const serviceMatches = 
           service.title.toLowerCase().includes(query.toLowerCase()) ||
           service.description.toLowerCase().includes(query.toLowerCase()) ||
-          service.platform.toLowerCase().includes(query.toLowerCase()) ||
-          service.category.toLowerCase().includes(query.toLowerCase());
+          (typeof service.platform === 'string' && service.platform.toLowerCase().includes(query.toLowerCase())) ||
+          (typeof service.category === 'string' && service.category.toLowerCase().includes(query.toLowerCase()));
         
         if (serviceMatches) return true;
 
-        // Vérifier dans les variantes si elles existent
+        // Check in variants if they exist (case-insensitive)
         if (service.variants && service.variants.length > 0) {
           return service.variants.some(variant => 
             variant.title.toLowerCase().includes(query.toLowerCase()) ||
@@ -71,12 +73,17 @@ const SearchBar = () => {
         return false;
       });
       
-      setResults(filtered.map(service => ({
+      console.log(`Found ${filtered.length} matching services`);
+      
+      // Limit results to 10 for better UX
+      const limitedResults = filtered.slice(0, 10).map(service => ({
         id: service.id,
         title: service.title,
         platform: service.platform,
         icon: service.icon
-      })));
+      }));
+      
+      setResults(limitedResults);
     } else {
       setResults([]);
     }
@@ -96,6 +103,19 @@ const SearchBar = () => {
   const handleClear = () => {
     setQuery("");
     inputRef.current?.focus();
+  };
+  
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    // Close search on Escape key
+    if (e.key === 'Escape') {
+      setIsOpen(false);
+    }
+    
+    // Navigate to services page with search query on Enter if there are no specific results
+    if (e.key === 'Enter' && query.trim().length > 1) {
+      navigate(`/services?search=${encodeURIComponent(query)}`);
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -126,6 +146,7 @@ const SearchBar = () => {
                   placeholder="Rechercher des services..."
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
+                  onKeyDown={handleKeyDown}
                   className="pr-8"
                 />
                 {query && (
@@ -161,7 +182,7 @@ const SearchBar = () => {
                             result.platform === "spotify" ? "#1DB954" : "#0077B5"
                         }}
                       >
-                        <result.icon size={16} className="text-white" />
+                        {result.icon && <result.icon size={16} className="text-white" />}
                       </div>
                       <span>{result.title}</span>
                     </div>
@@ -178,6 +199,22 @@ const SearchBar = () => {
               {query && query.length === 1 && (
                 <div className="mt-2 p-3 text-center text-muted-foreground">
                   Veuillez entrer au moins 2 caractères
+                </div>
+              )}
+              
+              {query && query.length > 1 && (
+                <div className="mt-2 border-t pt-2">
+                  <Button 
+                    variant="ghost" 
+                    className="w-full justify-start text-primary"
+                    onClick={() => {
+                      navigate(`/services?search=${encodeURIComponent(query)}`);
+                      setIsOpen(false);
+                    }}
+                  >
+                    <Search size={16} className="mr-2" />
+                    Voir tous les résultats pour "{query}"
+                  </Button>
                 </div>
               )}
             </div>
