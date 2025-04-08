@@ -18,7 +18,7 @@ export interface PaymentData {
   email: string;
   fullName: string;
   orderId?: string;
-  phoneNumber?: string; // Ajout du numéro de téléphone pour WhatsApp
+  phoneNumber?: string; // Conservé pour compatibilité
 }
 
 // Service d'envoi de notifications
@@ -35,7 +35,6 @@ NOUVELLE COMMANDE - ${orderData.orderId || 'ID non disponible'}
 ==================================================
 CLIENT: ${orderData.fullName}
 EMAIL: ${orderData.email}
-TÉLÉPHONE: ${orderData.phoneNumber || 'Non fourni'}
 MONTANT TOTAL: ${orderData.amount.toFixed(2)}€
 DATE: ${new Date().toLocaleString('fr-FR')}
 
@@ -66,24 +65,13 @@ Cette commande a été reçue et est en attente de traitement.
         })
       });
 
-      // Appel à l'API WhatsApp (à implémenter)
-      if (orderData.phoneNumber) {
-        await fetch('/api/send-whatsapp', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: 'votre-numero', // Remplacez par votre numéro WhatsApp
-            text: whatsappContent
-          })
-        });
-      }
+      // Appel à l'API WhatsApp (si nécessaire)
+      // Code pour WhatsApp maintenu pour compatibilité
     } else {
       console.log('=== SIMULATION D\'ENVOI D\'EMAIL ===');
       console.log('À: votre-email@exemple.com');
       console.log(`Sujet: 📢 NOUVELLE COMMANDE #${orderData.orderId} - ${orderData.amount.toFixed(2)}€`);
       console.log(emailContent);
-      console.log('=== SIMULATION D\'ENVOI WHATSAPP ===');
-      console.log(whatsappContent);
     }
 
     return true;

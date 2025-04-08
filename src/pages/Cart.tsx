@@ -6,36 +6,25 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CartItemsList from "@/components/CartItemsList";
 import CartSummary from "@/components/CartSummary";
-import CartCheckoutSection from "@/components/CartCheckoutSection";
 import EmptyCart from "@/components/EmptyCart";
 import { CartItemWithLink as CartItemType, getCart, removeFromCart, updateCartItemQuantity, updateCartItemSocialLink, clearCart } from "@/lib/cart";
 import { PaymentData } from "@/lib/stripe";
 import { createOrder, updateOrderPaymentStatus } from "@/lib/orders";
 import { useToast } from "@/hooks/use-toast";
+import StripeWrapper from "@/components/StripeWrapper";
+import StripePaymentForm from "@/components/StripePaymentForm";
+import { useAuth } from "@/components/AuthContext";
 import * as z from "zod";
-
-const formSchema = z.object({
-  fullName: z.string().min(3, {
-    message: "Le nom complet doit contenir au moins 3 caractères.",
-  }),
-  email: z.string().email({
-    message: "Veuillez entrer une adresse email valide.",
-  }),
-  phoneNumber: z.string().min(10, {
-    message: "Veuillez entrer un numéro de téléphone valide.",
-  }).optional(),
-});
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState<CartItemType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showCheckoutForm, setShowCheckoutForm] = useState(false);
   const [showPaymentForm, setShowPaymentForm] = useState(false);
   const [isProcessingPayment, setIsProcessingPayment] = useState(false);
-  const [customerInfo, setCustomerInfo] = useState<{ fullName: string; email: string; phoneNumber?: string } | null>(null);
   const [currentOrderId, setCurrentOrderId] = useState<string | null>(null);
   const { toast } = useToast();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   useEffect(() => {
     const loadedItems = getCart();
@@ -115,30 +104,21 @@ const Cart = () => {
       return;
     }
     
-    setShowCheckoutForm(true);
-    setTimeout(() => {
-      window.scrollTo({ 
-        top: document.body.scrollHeight,
-        behavior: 'smooth'
-      });
-    }, 100);
-  };
-  
-  const handlePaymentSubmit = (values: z.infer<typeof formSchema>) => {
-    setCustomerInfo({
-      fullName: values.fullName,
-      email: values.email,
-      phoneNumber: values.phoneNumber
-    });
+    // Créer directement la commande et afficher le formulaire de paiement
+    const customerInfo = {
+      fullName: user?.name || 'Client',
+      email: user?.email || 'client@exemple.com',
+      phoneNumber: ''
+    };
     
-    const order = createOrder(cartItems, values.fullName, values.email);
+    const order = createOrder(cartItems, customerInfo.fullName, customerInfo.email);
     setCurrentOrderId(order.id);
     
     setShowPaymentForm(true);
     setIsProcessingPayment(true);
     
     toast({
-      title: "Informations validées",
+      title: "Prêt pour le paiement",
       description: "Veuillez procéder au paiement pour finaliser votre commande.",
     });
     
@@ -184,9 +164,9 @@ const Cart = () => {
         price: item.variant?.price || item.service.price,
         socialMediaLink: item.socialMediaLink || ''
       })),
-      email: customerInfo?.email || '',
-      fullName: customerInfo?.fullName || '',
-      phoneNumber: customerInfo?.phoneNumber || '',
+      email: user?.email || 'client@exemple.com',
+      fullName: user?.name || 'Client',
+      phoneNumber: '',
       orderId: currentOrderId || undefined
     };
   };
@@ -228,15 +208,23 @@ const Cart = () => {
                   handleUpdateSocialLink={handleUpdateSocialLink}
                 />
                 
-                <CartCheckoutSection 
-                  showCheckoutForm={showCheckoutForm}
-                  showPaymentForm={showPaymentForm}
-                  handlePaymentSubmit={handlePaymentSubmit}
-                  isProcessingPayment={isProcessingPayment}
-                  getPaymentData={getPaymentData}
-                  handlePaymentSuccess={handlePaymentSuccess}
-                  handlePaymentError={handlePaymentError}
-                />
+                {showPaymentForm && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    transition={{ duration: 0.5 }}
+                    className="bg-card p-6 rounded-xl mt-8"
+                  >
+                    <h2 className="text-xl font-medium mb-6">Paiement</h2>
+                    <StripeWrapper>
+                      <StripePaymentForm 
+                        paymentData={getPaymentData()}
+                        onSuccess={handlePaymentSuccess}
+                        onError={handlePaymentError}
+                      />
+                    </StripeWrapper>
+                  </motion.div>
+                )}
               </div>
               
               <div className="lg:col-span-1">
@@ -244,9 +232,9 @@ const Cart = () => {
                   cartItems={cartItems}
                   calculateTotal={calculateTotal}
                   handleProceedToCheckout={handleProceedToCheckout}
-                  showCheckoutForm={showCheckoutForm}
+                  showCheckoutForm={false}
                   showPaymentForm={showPaymentForm}
-                  setShowCheckoutForm={setShowCheckoutForm}
+                  setShowCheckoutForm={() => {}}
                   setShowPaymentForm={setShowPaymentForm}
                   isProcessingPayment={isProcessingPayment}
                 />
