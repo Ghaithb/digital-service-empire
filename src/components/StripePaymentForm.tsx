@@ -2,9 +2,9 @@
 import React, { useState } from "react";
 import { CardElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { Button } from "@/components/ui/button";
-import { createPaymentSession, PaymentData, sendOrderNotifications } from "@/lib/stripe";
+import { createPaymentSession, PaymentData, sendOrderNotifications, validatePaymentData } from "@/lib/stripe";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, Lock, CreditCard, CheckCircle } from "lucide-react";
+import { Shield, Lock, CreditCard, CheckCircle, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
 
 interface StripePaymentFormProps {
@@ -18,9 +18,11 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
   const elements = useElements();
   const [isProcessing, setIsProcessing] = useState(false);
   const [cardComplete, setCardComplete] = useState(false);
+  const [cardError, setCardError] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
   
+  // Options avancées pour la validation de carte
   const CARD_ELEMENT_OPTIONS = {
     style: {
       base: {
@@ -40,7 +42,7 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
         },
       },
     },
-    hidePostalCode: true,
+    hidePostalCode: false, // Activer le code postal pour la vérification d'adresse
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,17 +65,49 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
     }
 
     setIsProcessing(true);
+    setCardError(null);
 
     try {
-      // Vérifie si tous les liens sociaux nécessaires sont renseignés
-      const missingLinks = paymentData.items.filter(item => !item.socialMediaLink);
-      if (missingLinks.length > 0) {
+      // Vérifier que la carte est complète
+      if (!cardComplete) {
+        setIsProcessing(false);
+        setCardError("Veuillez compléter les informations de carte");
         toast({
-          title: "Information manquante",
-          description: "Veuillez renseigner tous les liens des réseaux sociaux pour vos services.",
+          title: "Informations incomplètes",
+          description: "Veuillez remplir correctement tous les champs de la carte",
           variant: "destructive",
         });
+        return;
+      }
+
+      // Valider les données de paiement
+      const validation = validatePaymentData(paymentData);
+      if (!validation.valid) {
         setIsProcessing(false);
+        toast({
+          title: "Validation échouée",
+          description: validation.message || "Données de paiement invalides",
+          variant: "destructive",
+        });
+        onError(validation.message || "Données de paiement invalides");
+        return;
+      }
+
+      // Vérifier les informations de carte avec Stripe avant de créer la session
+      const { error: cardValidationError } = await stripe.createPaymentMethod({
+        type: 'card',
+        card: cardElement,
+      });
+
+      if (cardValidationError) {
+        setIsProcessing(false);
+        setCardError(cardValidationError.message || "Carte invalide");
+        toast({
+          title: "Erreur de carte",
+          description: cardValidationError.message || "Carte bancaire invalide ou refusée",
+          variant: "destructive",
+        });
+        onError(cardValidationError.message || "Carte bancaire invalide");
         return;
       }
 
@@ -131,6 +165,12 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
     }
   };
 
+  // Gestionnaire d'événement pour les changements de l'élément carte
+  const handleCardChange = (event: any) => {
+    setCardComplete(event.complete);
+    setCardError(event.error ? event.error.message : null);
+  };
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="p-5 border rounded-md bg-card">
@@ -139,13 +179,20 @@ const StripePaymentForm = ({ paymentData, onSuccess, onError }: StripePaymentFor
           <h3 className="font-medium">Informations de carte bancaire</h3>
         </div>
         
-        <div className="p-4 border rounded-md bg-background">
+        <div className={`p-4 border rounded-md ${cardError ? 'border-destructive' : 'bg-background'}`}>
           <CardElement 
             options={CARD_ELEMENT_OPTIONS}
-            onChange={(e) => setCardComplete(e.complete)} 
+            onChange={handleCardChange}
             className="py-2"
           />
         </div>
+        
+        {cardError && (
+          <div className="mt-2 flex items-center text-destructive text-sm">
+            <AlertTriangle className="h-4 w-4 mr-2" />
+            <span>{cardError}</span>
+          </div>
+        )}
         
         <div className="mt-3 text-sm text-muted-foreground">
           Pour le test, utilisez le numéro 4242 4242 4242 4242, une date d'expiration future et un code CVC à 3 chiffres.

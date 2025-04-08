@@ -81,9 +81,49 @@ Cette commande a été reçue et est en attente de traitement.
   }
 };
 
+// Validation des données de paiement
+export const validatePaymentData = (data: PaymentData): { valid: boolean; message?: string } => {
+  // Vérification de l'email
+  if (!data.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(data.email)) {
+    return { valid: false, message: 'Email invalide' };
+  }
+  
+  // Vérification du montant
+  if (data.amount <= 0 || isNaN(data.amount)) {
+    return { valid: false, message: 'Montant invalide' };
+  }
+  
+  // Vérification des articles
+  if (!data.items || data.items.length === 0) {
+    return { valid: false, message: 'Aucun article dans le panier' };
+  }
+  
+  // Vérification des liens sociaux
+  for (const item of data.items) {
+    if (!item.socialMediaLink) {
+      return { valid: false, message: 'Lien social manquant pour ' + item.name };
+    }
+    
+    // Validation basique de lien URL
+    try {
+      new URL(item.socialMediaLink);
+    } catch (e) {
+      return { valid: false, message: 'Lien social invalide pour ' + item.name };
+    }
+  }
+  
+  return { valid: true };
+};
+
 // Fonction pour créer une session de paiement
 export const createPaymentSession = async (paymentData: PaymentData): Promise<{ sessionId: string }> => {
   try {
+    // Valider les données avant de traiter le paiement
+    const validation = validatePaymentData(paymentData);
+    if (!validation.valid) {
+      throw new Error(validation.message || 'Données de paiement invalides');
+    }
+    
     // Envoyer les notifications lors de la création de la session
     await sendOrderNotifications(paymentData);
     
@@ -118,11 +158,16 @@ export const createPaymentSession = async (paymentData: PaymentData): Promise<{ 
   }
 };
 
-// Vérifier le statut d'un paiement
+// Vérifier le statut d'un paiement avec des vérifications supplémentaires
 export const checkPaymentStatus = async (sessionId: string): Promise<{ status: 'succeeded' | 'processing' | 'failed' }> => {
   try {
+    // Validation de base de l'ID de session
+    if (!sessionId || typeof sessionId !== 'string' || sessionId.length < 10) {
+      throw new Error('ID de session invalide');
+    }
+    
     // En production, appel à votre API backend pour vérifier le statut
-    const response = await fetch(`/api/check-payment-status?sessionId=${sessionId}`);
+    const response = await fetch(`/api/check-payment-status?sessionId=${encodeURIComponent(sessionId)}`);
     
     if (!response.ok) {
       throw new Error('Erreur lors de la vérification du statut du paiement');
