@@ -1,9 +1,9 @@
-
 import { loadStripe } from '@stripe/stripe-js';
 import { CartItemWithLink } from './cart';
 
 // Clé publique Stripe (pour le frontend)
-export const stripePromise = loadStripe("pk_test_51PUigvP6gU8ilmUx9sZ4L2e2Zcio8mF1ZaVqCFaGDSuD9OGzQpP");
+// IMPORTANTE: Cette clé doit être remplacée par votre clé de production pour accepter de vrais paiements
+export const stripePromise = loadStripe("pk_live_51PUigvP6gU8ilmUxVotreCléProduction");
 
 // Types pour les paiements
 export interface PaymentData {
